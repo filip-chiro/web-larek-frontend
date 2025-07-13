@@ -1,6 +1,4 @@
-import { ProductCategory } from "../types";
-
-const API_ORIGIN = 'https://larek-api.nomoreparties.com';
+const API_ORIGIN = process.env.API_ORIGIN || 'https://larek-api.nomoreparties.com';
 export const API_URL = `${API_ORIGIN}/api/weblarek`;
 export const CDN_URL = `${API_ORIGIN}/content/weblarek`;
 
