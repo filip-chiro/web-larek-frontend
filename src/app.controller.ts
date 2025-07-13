@@ -62,7 +62,6 @@ export class AppController {
   }
 
   init(): void {
-    // this._basketHeaderCounterComponent.setQuantityProductsInBasket(22);
     this._loadProductsAndRender();
     this._initCustomEventListeners();
   }
@@ -96,6 +95,6 @@ export class AppController {
 
     this._statefulEventEmitterService.on(EventNames.OPEN_SUCCESS_ORDER, () => {
       this._modalSuccessOrderComponent.open();
-    })
+    });
   }
 }
