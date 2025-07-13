@@ -1,16 +1,18 @@
-import { ApiOrderService } from "../../services/api-order.service";
-import { ApiProductsService } from "../../services/api-products.service";
-import { StatefulEventEmitterService } from "../../services/stateful-event-emitter.service";
-import { CardCatalogComponent } from "./card-catalog.component";
-import { GalleryComponent } from "./gallery.component";
-import { ModalCardFullComponent } from "./modal-card-full.component";
-import { EventNames, Product } from "../../types";
-import { BasketService } from "../../services/basket.service";
-import { BasketHeaderComponent } from "./basket-header.component";
-import { ModalBasketComponent } from "./modal-basket.component";
-import { BasketCardComponent } from "./basket-card.component";
-import { OrderService } from "../../services/order.service";
-import { ModalPaymentAddressOrderComponent } from "./modal-payment-address-order.component";
+import { BasketCardComponent } from "./components/features/basket-card.component";
+import { BasketHeaderComponent } from "./components/features/basket-header.component";
+import { CardCatalogComponent } from "./components/features/card-catalog.component";
+import { GalleryComponent } from "./components/features/gallery.component";
+import { ModalBasketComponent } from "./components/features/modal-basket.component";
+import { ModalCardFullComponent } from "./components/features/modal-card-full.component";
+import { ModalEmailPhoneOrderComponent } from "./components/features/modal-email-phone-order.component";
+import { ModalPaymentAddressOrderComponent } from "./components/features/modal-payment-address-order.component";
+import { ModalSuccessOrderComponent } from "./components/features/modal-succes-order.component";
+import { ApiOrderService } from "./services/api-order.service";
+import { ApiProductsService } from "./services/api-products.service";
+import { BasketService } from "./services/basket.service";
+import { OrderService } from "./services/order.service";
+import { StatefulEventEmitterService } from "./services/stateful-event-emitter.service";
+import { EventNames, Product } from "./types";
 
 export class AppController {
   private readonly _apiOrderService: ApiOrderService;
@@ -25,6 +27,8 @@ export class AppController {
   private readonly _modalBasketComponent: ModalBasketComponent;
   private readonly _orderService: OrderService;
   private readonly _modalPaymentAdressOrderComponent: ModalPaymentAddressOrderComponent;
+  private readonly _modalEmailPhoneOrderComponent: ModalEmailPhoneOrderComponent;
+  private readonly _modalSuccessOrderComponent: ModalSuccessOrderComponent;
 
   constructor() {
     this._apiOrderService = new ApiOrderService();
@@ -42,7 +46,19 @@ export class AppController {
       this._statefulEventEmitterService
     );
     this._orderService = new OrderService(this._statefulEventEmitterService, this._apiOrderService);
-    this._modalPaymentAdressOrderComponent = new ModalPaymentAddressOrderComponent(this._orderService);
+    this._modalPaymentAdressOrderComponent = new ModalPaymentAddressOrderComponent(
+      this._orderService,
+      this._statefulEventEmitterService
+    );
+    this._modalEmailPhoneOrderComponent = new ModalEmailPhoneOrderComponent(
+      this._orderService,
+      this._statefulEventEmitterService,
+      this._basketService
+    );
+    this._modalSuccessOrderComponent = new ModalSuccessOrderComponent(
+      this._basketService,
+      this._orderService
+    );
   }
 
   init(): void {
@@ -73,5 +89,13 @@ export class AppController {
     this._statefulEventEmitterService.on(EventNames.OPEN_ORDER_ADDRESS_PAYMENT, () => {
       this._modalPaymentAdressOrderComponent.open();
     });
+
+    this._statefulEventEmitterService.on(EventNames.OPEN_ORDER_EMAIL_PHONE, () => {
+      this._modalEmailPhoneOrderComponent.open();
+    });
+
+    this._statefulEventEmitterService.on(EventNames.OPEN_SUCCESS_ORDER, () => {
+      this._modalSuccessOrderComponent.open();
+    })
   }
 }

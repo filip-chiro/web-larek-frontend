@@ -1,4 +1,4 @@
-import { EventNames, Order, Payment, Product } from "../types";
+import { CreateOrderResponse, EventNames, Order, Payment, Product } from "../types";
 import { ApiOrderService } from "./api-order.service";
 import { StatefulEventEmitterService } from "./stateful-event-emitter.service";
 
@@ -26,17 +26,17 @@ export class OrderService {
     return order as Order;
   }
 
-  sendOrder(): void {
+  sendOrder(): Promise<CreateOrderResponse> {
     if (!this.isValid()) {
-      return;
+      throw new Error('Order is not valid');
     }
-    this._apiOrderService.send(this.getValidOrder());
+    return this._apiOrderService.send(this.getValidOrder());
   }
 
   isValid(): boolean {
     const order = this.getOrder();
 
-    return order.email && order.address && order.phone && order.payment && order.items.length !== 0;
+    return order.email && order.address && order.phone && order.payment && order.items.length !== 0 && (order.total !== undefined && order.total !== 0);
   }
 
   setPaymentMethod(paymentMethod: Payment): void {
@@ -71,12 +71,17 @@ export class OrderService {
     });
   }
 
-  setProducts(products: Product[]): void {
+  setProducts(products: Product[], basketPrice: number): void {
     const order = this.getOrder();
     this._statefulEventEmitterService.emit(EventNames.ORDER, {
       ...order,
-      items: products.map(product => product.id)
+      items: products.map(product => product.id),
+      total: basketPrice
     });
+  }
+
+  clear(): void {
+    this._statefulEventEmitterService.offAllByEventName(EventNames.ORDER);
   }
 
 }

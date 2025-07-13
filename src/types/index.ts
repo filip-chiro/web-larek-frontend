@@ -36,6 +36,8 @@ export enum EventNames {
   OPEN_CART = 'open-cart',
   ORDER = 'order',
   OPEN_ORDER_ADDRESS_PAYMENT = 'open-order-address-payment',
+  OPEN_ORDER_EMAIL_PHONE = 'open-order-email-phone',
+  OPEN_SUCCESS_ORDER = 'open-success-order',
 }
 
 export interface Order {

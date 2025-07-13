@@ -70,5 +70,9 @@ export class BasketService {
     this._statefulEventEmitterService.offAllByEventName(`add-card-to-basket-${id}`);
   }
 
+  clear(): void {
+    this._statefulEventEmitterService.emit(EventNames.BASKET, []);
+  }
+
   
 }

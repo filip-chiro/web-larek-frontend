@@ -1,5 +1,6 @@
-import { AppController } from './components/features/app.controller';
 import './scss/styles.scss';
+import { AppController } from './app.controller';
+
 
 const appController = new AppController();
 

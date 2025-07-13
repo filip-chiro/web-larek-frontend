@@ -19,7 +19,6 @@ export class BasketHeaderComponent {
 
   private _initEventListeners(): void {
     this._headerBasketElement.addEventListener('click', (event) => {
-      event.preventDefault();
       this._statefulEventEmitterService.emit(EventNames.OPEN_CART);
     });
   }

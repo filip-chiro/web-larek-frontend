@@ -63,10 +63,8 @@ export class ModalComponent {
   }
 
   private _closeByEsc = (event: KeyboardEvent): void => {
-    event.preventDefault();
     if (event.key === 'Escape') {
       this._close();
     }
-    
   }
 }
