@@ -40,6 +40,8 @@ jobs:
       - name: Build
         run: |
           npm run build:github
+        env:
+          API_ORIGIN: ${{ secrets.API_ORIGIN }}
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
