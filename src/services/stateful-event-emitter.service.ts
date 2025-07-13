@@ -6,12 +6,12 @@ import { EventEmitter, EventName } from "../components/base/events";
 export class StatefulEventEmitterService extends EventEmitter {
   private _lastValues: Map<string, any> = new Map();
 
-  override emit<T extends object>(eventName: string, data?: T): void {
+  override emit<T extends any>(eventName: string, data?: T): void {
     this._lastValues.set(eventName, data);
     super.emit(eventName, data);
   }
 
-  override on<T extends object>(
+  override on<T extends any>(
     eventName: EventName,
     callback: (event: T) => void
   ): void {
@@ -20,6 +20,17 @@ export class StatefulEventEmitterService extends EventEmitter {
     if (typeof eventName === 'string' && this._lastValues.has(eventName)) {
       const lastValue = this._lastValues.get(eventName);
       callback(lastValue);
+    }
+  }
+
+  /**
+   * Снять все обработчики конкретного события
+   */
+  offAllByEventName(eventName: EventName): void {
+    this._events.delete(eventName);
+
+    if (typeof eventName === 'string') {
+      this._lastValues.delete(eventName);
     }
   }
 

@@ -29,3 +29,20 @@ export interface GetAllProductsResponse {
   total: number;
   items: Product[];
 }
+
+export enum EventNames {
+  OPEN_CARD_FULL = 'open-card-full',
+  BASKET = 'basket',
+  OPEN_CART = 'open-cart',
+  ORDER = 'order',
+  OPEN_ORDER_ADDRESS_PAYMENT = 'open-order-address-payment',
+}
+
+export interface Order {
+  payment: Payment;
+  email: string;
+  phone: string;
+  address: string;
+  total: number;
+  items: string[];
+}

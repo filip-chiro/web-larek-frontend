@@ -1,6 +1,6 @@
 import { StatefulEventEmitterService } from "../../services/stateful-event-emitter.service";
-import { Product } from "../../types";
-import { getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../utils/utils";
+import { EventNames, Product } from "../../types";
+import { cloneTemplate, getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../utils/utils";
 
 export class CardCatalogComponent {
   private readonly _cardCatalogTemplateElement: HTMLTemplateElement;
@@ -12,7 +12,7 @@ export class CardCatalogComponent {
   }
   
   createElement(product: Product): HTMLElement {
-    const cardCatalogElement = this._cardCatalogTemplateElement.content.cloneNode(true) as HTMLElement;
+    const cardCatalogElement = cloneTemplate(this._cardCatalogTemplateElement);
     const cardCategory = cardCatalogElement.querySelector<HTMLSpanElement>('.card__category');
     const cardTitle = cardCatalogElement.querySelector<HTMLHeadingElement>('.card__title');
     const cardImg = cardCatalogElement.querySelector<HTMLImageElement>('.card__image');
@@ -25,7 +25,13 @@ export class CardCatalogComponent {
     cardImg.alt = product.title;
     cardImg.src = getCdnImgUrl(product.image);
     cardPrice.textContent = getProductPriceText(product.price);
+
+    cardCatalogElement.addEventListener('click', () => this._cardCatalogClick(product));
     
     return cardCatalogElement;
+  }
+
+  private _cardCatalogClick = (product: Product): void => {
+    this._statefulEventEmitterService.emit(EventNames.OPEN_CARD_FULL, product);
   }
 }

@@ -37,6 +37,7 @@
     "build": "webpack --mode=production --node-env=production",
     "build:dev": "webpack --mode=development",
     "build:prod": "webpack --mode=production --node-env=production",
+    "build:github": "npm run build:prod",
     "watch": "webpack --watch",
     "start": "webpack serve",
     "lint": "eslint --ext .js,.ts ./src",

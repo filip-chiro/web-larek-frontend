@@ -138,7 +138,11 @@ export function createElement<
 }
 
 export function getProductPriceText(price: number | null): string {
-    return price === null ? 'Бесценно' : String(price);
+    return price === null ? 'Бесценно' : `${price} синапсов`;
+}
+
+export function getProductPrice(price: number | null): number {
+    return price === null ? 0 : price;
 }
 
 export function getProductCategoryCssClass(category: ProductCategory): string {
