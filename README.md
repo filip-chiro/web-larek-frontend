@@ -266,7 +266,7 @@ private _closeByEsc = (event: KeyboardEvent): void
 
 ---
 
-🧩 ModalSuccessOrderComponent
+**ModalSuccessOrderComponent**
 
 Компонент отображения модального окна успешного оформления заказа. Наследуется от ModalComponent.
 
