@@ -1,16 +1,28 @@
 import { EventEmitter, EventName } from "../components/base/events";
 
 /**
- * Расширенный брокер, сохраняющий последние данные по событиям
+ * StatefulEventEmitterService — расширение EventEmitter,
+ * которое сохраняет последнее значение каждого события.
+ * При подписке сразу вызывает обработчик с последним сохранённым значением.
  */
 export class StatefulEventEmitterService extends EventEmitter {
   private _lastValues: Map<string, any> = new Map();
 
+  /**
+   * Переопределение emit для сохранения последнего значения события.
+   * @param eventName Имя события.
+   * @param data Данные события.
+   */
   override emit<T extends any>(eventName: string, data?: T): void {
     this._lastValues.set(eventName, data);
     super.emit(eventName, data);
   }
 
+  /**
+   * Переопределение on для вызова обработчика сразу с последним значением.
+   * @param eventName Имя события.
+   * @param callback Обработчик события.
+   */
   override on<T extends any>(
     eventName: EventName,
     callback: (event: T) => void
@@ -24,7 +36,8 @@ export class StatefulEventEmitterService extends EventEmitter {
   }
 
   /**
-   * Снять все обработчики конкретного события
+   * Удалить всех подписчиков указанного события и сбросить последнее значение.
+   * @param eventName Имя события.
    */
   offAllByEventName(eventName: EventName): void {
     this._events.delete(eventName);
@@ -35,14 +48,17 @@ export class StatefulEventEmitterService extends EventEmitter {
   }
 
   /**
-   * Получить последнее значение события
+   * Получить последнее значение события.
+   * @param eventName Имя события.
+   * @returns Последние данные события, либо undefined.
    */
   getLast<T = any>(eventName: string): T | undefined {
     return this._lastValues.get(eventName);
   }
 
   /**
-   * Очистить сохраненные значения
+   * Очистить сохранённые значения события или всех событий.
+   * @param eventName Имя события, если нужно очистить конкретное.
    */
   clearLast(eventName?: string) {
     if (eventName) {

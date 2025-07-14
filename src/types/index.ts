@@ -38,6 +38,11 @@ export enum EventNames {
   OPEN_ORDER_ADDRESS_PAYMENT = 'open-order-address-payment',
   OPEN_ORDER_EMAIL_PHONE = 'open-order-email-phone',
   OPEN_SUCCESS_ORDER = 'open-success-order',
+  EMAIL_INPUT = 'email-input',
+  PHONE_INPUT = 'phone-input',
+  ORDER_SUBMIT = 'order-submit',
+  ORDER_CLEAR = 'order-clear',
+  ORDER_CHANGED = 'order-changed',
 }
 
 export interface Order {
@@ -47,4 +52,9 @@ export interface Order {
   address: string;
   total: number;
   items: string[];
+}
+
+export interface Component {
+  [x: string]: any;
+  render(...args: any[]): HTMLElement;
 }

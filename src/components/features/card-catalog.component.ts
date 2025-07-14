@@ -1,8 +1,14 @@
 import { StatefulEventEmitterService } from "../../services/stateful-event-emitter.service";
-import { EventNames, Product } from "../../types";
+import { Component, EventNames, Product } from "../../types";
 import { cloneTemplate, getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../utils/utils";
 
-export class CardCatalogComponent {
+/**
+ * Компонент карточки продукта в галерее.
+ * 
+ * Отвечает за создание DOM-элемента карточки продукта,
+ * заполнение его данными продукта и генерацию события при клике.
+ */
+export class CardCatalogComponent implements Component {
   private readonly _cardCatalogTemplateElement: HTMLTemplateElement;
 
   constructor(
@@ -10,8 +16,15 @@ export class CardCatalogComponent {
   ) {
     this._cardCatalogTemplateElement = document.querySelector('#card-catalog');
   }
-  
-  createElement(product: Product): HTMLElement {
+
+  /**
+   * Создаёт DOM-элемент карточки продукта на основе шаблона,
+   * заполняет его данными и навешивает обработчик клика.
+   * 
+   * @param product - объект продукта для отображения
+   * @returns HTMLElement - готовый элемент карточки продукта
+   */
+  render(product: Product): HTMLElement {
     const cardCatalogElement = cloneTemplate(this._cardCatalogTemplateElement);
     const cardCategory = cardCatalogElement.querySelector<HTMLSpanElement>('.card__category');
     const cardTitle = cardCatalogElement.querySelector<HTMLHeadingElement>('.card__title');
@@ -31,6 +44,11 @@ export class CardCatalogComponent {
     return cardCatalogElement;
   }
 
+  /**
+   * Обработчик клика по карточке, который инициирует событие открытия полной информации о продукте.
+   * 
+   * @param product - продукт, связанный с данной карточкой
+   */
   private _cardCatalogClick = (product: Product): void => {
     this._statefulEventEmitterService.emit(EventNames.OPEN_CARD_FULL, product);
   }
