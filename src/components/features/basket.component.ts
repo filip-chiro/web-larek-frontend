@@ -81,7 +81,7 @@ export class BasketComponent implements Component {
    */
   private _appendBasketElements(listElement: HTMLUListElement, products: Product[]): void {
     for (let i = 0; i < products.length; i++) {
-      const basketCardElement = this._basketCardComponent.createElement(products[i], i);
+      const basketCardElement = this._basketCardComponent.render(products[i], i);
       listElement.appendChild(basketCardElement);
     }
   }

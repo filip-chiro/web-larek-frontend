@@ -1,5 +1,5 @@
 import { BasketService } from "../../services/basket.service";
-import { Product } from "../../types";
+import { Component, Product } from "../../types";
 import { cloneTemplate, getProductPriceText } from "../../utils/utils";
 
 /**
@@ -8,7 +8,7 @@ import { cloneTemplate, getProductPriceText } from "../../utils/utils";
  * Отвечает за создание HTML-элемента списка товара в корзине,
  * заполнение его данными и обработку удаления товара из корзины.
  */
-export class BasketCardComponent {
+export class BasketCardComponent implements Component {
   private readonly _basketCardTemplate: HTMLTemplateElement;
 
   constructor(
@@ -26,7 +26,7 @@ export class BasketCardComponent {
    * @param index - индекс товара в списке корзины (для отображения порядкового номера)
    * @returns HTMLLIElement - готовый элемент товара в корзине
    */
-  createElement(product: Product, index: number): HTMLLIElement {
+  render(product: Product, index: number): HTMLLIElement {
     const basketCardElement = cloneTemplate<HTMLLIElement>(this._basketCardTemplate);
     const basketItemIndexElemet = basketCardElement.querySelector<HTMLSpanElement>('.basket__item-index');
     const basketItemTitleElement = basketCardElement.querySelector<HTMLSpanElement>('.card__title');
