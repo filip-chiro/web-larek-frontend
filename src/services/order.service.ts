@@ -114,8 +114,8 @@ export class OrderService {
     }
 
     this._apiOrderService.send(order as Order)
-      .then(() => {
-        this._statefulEventEmitterService.emit(EventNames.OPEN_SUCCESS_ORDER);
+      .then((res) => {
+        this._statefulEventEmitterService.emit(EventNames.OPEN_SUCCESS_ORDER, res);
       })
       .catch(err => {
         console.error(err);

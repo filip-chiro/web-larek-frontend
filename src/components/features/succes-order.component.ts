@@ -1,7 +1,7 @@
 import { BasketService } from "../../services/basket.service";
 import { ModalService } from "../../services/modal.service";
 import { OrderService } from "../../services/order.service";
-import { Component } from "../../types";
+import { Component, CreateOrderResponse } from "../../types";
 import { cloneTemplate, getProductPrice } from "../../utils/utils";
 
 /**
@@ -16,8 +16,6 @@ export class SuccessOrderComponent implements Component {
   private readonly _successOrderTemplate: HTMLTemplateElement;
 
   constructor(
-    private readonly _basketService: BasketService,
-    private readonly _orderService: OrderService,
     private readonly _modalService: ModalService
   ) {
     this._successOrderTemplate = document.querySelector('#success')!;
@@ -28,29 +26,18 @@ export class SuccessOrderComponent implements Component {
    * 
    * @returns HTMLElement, содержащий сообщение об успехе и кнопку закрытия
    */
-  render(): HTMLElement {
+  render(res: CreateOrderResponse): HTMLElement {
+    // здесь не происходит поиск в корневом дереве. происходит получение старого элемента по ссылке и каждый раз происходит поиск внутри клонированного элемента. не происходит поиск в корневом дереве. нельзя записывать элементы в this, так как это по функционалу класса метод render может вызываться сколько угодно раз и прошлые клонированные элементы в this не будут хранить реальное состояние
     const successOrderElement = cloneTemplate(this._successOrderTemplate);
-    const descriptionElement = successOrderElement.querySelector('.order-success__description')!;
-    const successBtnElement = successOrderElement.querySelector('.order-success__close')!;
-    const priceBasket = this._basketService.getPriceBasket();
+    const descriptionElement = successOrderElement.querySelector('.order-success__description');
+    const successBtnElement = successOrderElement.querySelector('.order-success__close');
 
-    descriptionElement.textContent = `Списано ${getProductPrice(priceBasket)} синапсов`;
+    descriptionElement.textContent = `Списано ${res.total} синапсов`;
 
     successBtnElement.addEventListener('click', () => {
-      this._modalService.close(this);
+      this._modalService.close(successOrderElement);
     });
-
-    this._modalService.onClose(this, this._handleClose);
 
     return successOrderElement;
   }
-
-  /**
-   * Обработчик закрытия модального окна:
-   * очищает данные заказа и корзины.
-   */
-  private _handleClose = () => {
-    this._orderService.clear();
-    this._basketService.clear();
-  };
 }

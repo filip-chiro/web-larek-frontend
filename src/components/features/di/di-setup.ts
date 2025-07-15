@@ -4,6 +4,7 @@ import { ApiProductsService } from "../../../services/api-products.service";
 import { BasketService } from "../../../services/basket.service";
 import { ModalService } from "../../../services/modal.service";
 import { OrderService } from "../../../services/order.service";
+import { ProductsService } from "../../../services/products.service";
 import { StatefulEventEmitterService } from "../../../services/stateful-event-emitter.service";
 import { ValidationOrderService } from "../../../services/validation-order.service";
 import { BasketCardComponent } from "../basket-card.component";
@@ -45,12 +46,12 @@ export function registerDependencies() {
   container.register(BasketComponent, { deps: [BasketService, BasketCardComponent, StatefulEventEmitterService, ModalService] });
   container.register(OrderService, { deps: [StatefulEventEmitterService, ValidationOrderService, ApiOrderService, BasketService] });
   container.register(PaymentAddressOrderComponent, { deps: [OrderService, StatefulEventEmitterService, ModalService] });
-  container.register(EmailPhoneOrderComponent, { deps: [OrderService, ModalService] });
-  container.register(SuccessOrderComponent, { deps: [BasketService, OrderService, ModalService] });
+  container.register(EmailPhoneOrderComponent, { deps: [OrderService, ModalService, BasketService] });
+  container.register(SuccessOrderComponent, { deps: [ModalService] });
+  container.register(ProductsService, { deps: [ApiProductsService, StatefulEventEmitterService] });
 
   container.register(AppController, {
     deps: [
-      ApiProductsService,
       StatefulEventEmitterService,
       ModalService,
       GalleryComponent,
@@ -60,7 +61,8 @@ export function registerDependencies() {
       BasketComponent,
       PaymentAddressOrderComponent,
       EmailPhoneOrderComponent,
-      SuccessOrderComponent
+      SuccessOrderComponent,
+      ProductsService
     ]
   });
 }

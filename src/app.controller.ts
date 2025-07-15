@@ -8,8 +8,9 @@ import { SuccessOrderComponent } from "./components/features/succes-order.compon
 import { ApiProductsService } from "./services/api-products.service";
 import { BasketService } from "./services/basket.service";
 import { ModalService } from "./services/modal.service";
+import { ProductsService } from "./services/products.service";
 import { StatefulEventEmitterService } from "./services/stateful-event-emitter.service";
-import { EventNames, Product } from "./types";
+import { CreateOrderResponse, EventNames, Product } from "./types";
 
 /**
  * Главный контроллер приложения, отвечающий за инициализацию и
@@ -25,7 +26,6 @@ import { EventNames, Product } from "./types";
  */
 export class AppController {
   constructor(
-    private readonly _apiProductsService: ApiProductsService,
     private readonly _statefulEventEmitterService: StatefulEventEmitterService,
     private readonly _modalService: ModalService,
     private readonly _galleryComponent: GalleryComponent,
@@ -35,7 +35,8 @@ export class AppController {
     private readonly _basketComponent: BasketComponent,
     private readonly _paymentAddressOrderComponent: PaymentAddressOrderComponent,
     private readonly _emailPhoneOrderComponent: EmailPhoneOrderComponent,
-    private readonly _successOrderComponent: SuccessOrderComponent
+    private readonly _successOrderComponent: SuccessOrderComponent,
+    private readonly _productsService: ProductsService
   ) {}
 
   /**
@@ -48,14 +49,19 @@ export class AppController {
     this._initCustomEventListeners();
   }
 
-  /**
-   * Загружает список продуктов с API и передаёт их в компонент галереи для рендера.
-   * @private
-   */
+/**
+ * Загружает список продуктов через сервис-адаптер `ProductsService` и передаёт их в компонент галереи.
+ * Продукты реактивно передаются из модели (`StatefulEventEmitterService`), которая обновляется адаптером.
+ * Представление получает данные через адаптер, не взаимодействуя напрямую с API или моделью
+ */
   private _loadProductsAndRender(): void {
-    this._apiProductsService.getAll().then(products => {
-      this._galleryComponent.renderProductList(products);
-    });
+    this._productsService.getAll()
+      .then(products => {
+        this._galleryComponent.renderProductList(products);
+      })
+      .catch(error => {
+        console.error('Ошибка при попытке загрузить список товаров', error)
+      });
   }
 
   /**
@@ -84,8 +90,8 @@ export class AppController {
       this._modalService.open(this._emailPhoneOrderComponent);
     });
 
-    this._statefulEventEmitterService.on(EventNames.OPEN_SUCCESS_ORDER, () => {
-      this._modalService.open(this._successOrderComponent);
+    this._statefulEventEmitterService.on(EventNames.OPEN_SUCCESS_ORDER, (res: CreateOrderResponse) => {
+      this._modalService.open(this._successOrderComponent.render(res));
     });
   }
 }

@@ -43,6 +43,7 @@ export enum EventNames {
   ORDER_SUBMIT = 'order-submit',
   ORDER_CLEAR = 'order-clear',
   ORDER_CHANGED = 'order-changed',
+  PRODUCTS_CHANGED = 'products-changed'
 }
 
 export interface Order {

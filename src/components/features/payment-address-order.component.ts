@@ -41,6 +41,7 @@ export class PaymentAddressOrderComponent implements Component {
    * @returns {HTMLElement} HTML-элемент формы для вставки в DOM.
    */
   render(): HTMLElement {
+    // здесь не происходит поиск в корневом дереве. происходит получение старого элемента по ссылке и каждый раз происходит поиск внутри клонированного элемента. не происходит поиск в корневом дереве. нельзя записывать элементы в this, так как это по функционалу класса метод render может вызываться сколько угодно раз и прошлые клонированные элементы в this не будут хранить реальное состояние
     const element = cloneTemplate(this._template);
     const btnOnline = element.querySelector<HTMLButtonElement>('[name="card"]')!;
     const btnOffline = element.querySelector<HTMLButtonElement>('[name="cash"]')!;
@@ -74,7 +75,7 @@ export class PaymentAddressOrderComponent implements Component {
     });
 
     // при закрытии модалки ручном (крестик, ESC) сбрасываем состояние заказа
-    this._modalService.onClose(this, () => {
+    this._modalService.onCloseOnce(this, () => {
       this._orderService.clear();
       unsubscribe();
     });

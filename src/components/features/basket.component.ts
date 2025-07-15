@@ -41,6 +41,7 @@ export class BasketComponent implements Component {
    * @returns HTMLElement, готовый к вставке в DOM.
    */
   render(): HTMLElement {
+    // здесь не происходит поиск в корневом дереве. происходит получение старого элемента по ссылке и каждый раз происходит поиск внутри клонированного элемента. не происходит поиск в корневом дереве. нельзя записывать элементы в this, так как это по функционалу класса метод render может вызываться сколько угодно раз и прошлые клонированные элементы в this не будут хранить реальное состояние
     const basketElement = cloneTemplate(this._basketTemplate);
     const listElement = basketElement.querySelector<HTMLUListElement>('.basket__list')!;
     const priceElement = basketElement.querySelector<HTMLSpanElement>('.basket__price')!;

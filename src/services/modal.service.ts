@@ -17,15 +17,10 @@ export class ModalService {
   } | null = null;
 
   private _onCloseListeners = new Map<HTMLElement, Set<() => void>>();
+  private _onCloseOnceListeners = new Map<HTMLElement, Set<() => void>>();
 
   constructor(private readonly _modalComponent: ModalComponent) {}
 
-  /**
-   * Открывает модальное окно с указанным содержимым.
-   * @param content - компонент с методом render() или уже готовый HTMLElement для отображения.
-   * @param renderArgs - опциональные аргументы для метода render компонента.
-   * @param options - дополнительные опции с коллбеками onOpen и onClose.
-   */
   open(
     content: Component | HTMLElement,
     renderArgs?: any[] | any,
@@ -33,9 +28,13 @@ export class ModalService {
   ): void {
     const element = this._resolveElement(content, renderArgs);
 
-    // 👇 Присваиваем обратно в компонент — чтобы потом onClose знал что делать
     if (this._isComponent(content)) {
       (content as any).__modalElement = element;
+    }
+
+    if (this._currentModal && this._currentModal.element !== element) {
+      this._modalComponent.close();
+      this._currentModal = null;
     }
 
     if (this._currentModal?.element === element) return;
@@ -51,7 +50,7 @@ export class ModalService {
     this._modalComponent.open(element, {
       onOpen: options?.onOpen,
       onClose: () => {
-        this._invokeCloseCallbacks(element);
+        this._invokeAllCloseCallbacks(element);
         this._handleModalClose(modal);
         if (this._currentModal?.element === element) {
           this._currentModal = null;
@@ -60,11 +59,6 @@ export class ModalService {
     });
   }
 
-  /**
-   * Закрывает модальное окно, связанное с указанным компонентом или элементом.
-   * Если модалка с этим элементом не открыта, метод не выполняет действий.
-   * @param content - компонент или DOM-элемент модалки, которую нужно закрыть.
-   */
   close(content: Component | HTMLElement): void {
     if (!this._currentModal) return;
 
@@ -81,34 +75,30 @@ export class ModalService {
       elementToClose = content;
     }
 
-    if (this._currentModal.element !== elementToClose) return;
+    if (this._currentModal.element !== elementToClose) {
+      console.warn('[ModalService] Tried to close modal with element that is not currently open.');
+      return;
+    }
 
     this._modalComponent.close();
   }
 
-  /**
-   * Регистрирует callback, который будет вызван при закрытии модального окна,
-   * связанного с указанным компонентом или элементом.
-   * @param target - компонент или элемент, на закрытие которого нужно подписаться.
-   * @param callback - функция, вызываемая при закрытии модалки.
-   */
   onClose(target: Component | HTMLElement, callback: () => void): void {
     setTimeout(() => this._onClose(target, callback), 0);
   }
 
-  private _onClose(target: Component | HTMLElement, callback: () => void): void {
+  private _onClose(content: Component | HTMLElement, callback: () => void): void {
     let element: HTMLElement;
 
-    // Если это компонент и он уже был открыт
-    if (this._isComponent(target)) {
-      const maybeRendered = (target as any).__modalElement;
+    if (this._isComponent(content)) {
+      const maybeRendered = (content as any).__modalElement;
       if (!maybeRendered) {
         console.warn('[ModalService] Cannot register onClose: component was not rendered via open()');
         return;
       }
       element = maybeRendered;
     } else {
-      element = target;
+      element = content;
     }
 
     if (!this._onCloseListeners.has(element)) {
@@ -118,19 +108,57 @@ export class ModalService {
     this._onCloseListeners.get(element)!.add(callback);
   }
 
-  private _invokeCloseCallbacks(element: HTMLElement): void {
-    const callbacks = this._onCloseListeners.get(element);
-    if (!callbacks) return;
+  onCloseOnce(target: Component | HTMLElement, callback: () => void): void {
+    setTimeout(() => this._onCloseOnce(target, callback), 0);
+  }
 
-    for (const cb of callbacks) {
-      try {
-        cb();
-      } catch (err) {
-        console.error('ModalService onClose error:', err);
+  private _onCloseOnce(content: Component | HTMLElement, callback: () => void): void {
+    let element: HTMLElement;
+
+    if (this._isComponent(content)) {
+      const maybeRendered = (content as any).__modalElement;
+      if (!maybeRendered) {
+        console.warn('[ModalService] Cannot register onCloseOnce: component was not rendered via open()');
+        return;
       }
+      element = maybeRendered;
+    } else {
+      element = content;
     }
 
-    this._onCloseListeners.delete(element);
+    if (!this._onCloseOnceListeners.has(element)) {
+      this._onCloseOnceListeners.set(element, new Set());
+    }
+
+    this._onCloseOnceListeners.get(element)!.add(callback);
+  }
+
+  private _invokeAllCloseCallbacks(element: HTMLElement): void {
+    const callbacks = this._onCloseListeners.get(element);
+    if (callbacks) {
+      for (const cb of callbacks) {
+        try {
+          cb();
+        } catch (err) {
+          console.error('ModalService onClose error:', err);
+        }
+      }
+      this._onCloseListeners.delete(element);
+    }
+
+    if (!this._currentModal || this._currentModal.element !== element) {
+      const onceCallbacks = this._onCloseOnceListeners.get(element);
+      if (onceCallbacks) {
+        for (const cb of onceCallbacks) {
+          try {
+            cb();
+          } catch (err) {
+            console.error('ModalService onCloseOnce error:', err);
+          }
+        }
+        this._onCloseOnceListeners.delete(element);
+      }
+    }
   }
 
   private _handleModalClose(modal: {
