@@ -537,7 +537,7 @@ clear(): void
 
 **Методы**
 
-  createElement(product: Product): HTMLElement  
+  render(product: Product): HTMLElement  
   Создаёт DOM-элемент карточки товара на основе шаблона. Заполняет элементы карточки данными товара: категорией, заголовком, изображением и ценой. Назначает обработчик клика на карточку, вызывающий внутренний метод _cardCatalogClick.
 
   private _cardCatalogClick(product: Product): void  
@@ -578,7 +578,7 @@ clear(): void
 
 **Методы**
 
-  createElement(product: Product, index: number): HTMLLIElement  
+  render(product: Product, index: number): HTMLLIElement  
   Создаёт и возвращает элемент карточки товара на основе шаблона.  
   Устанавливает:  
     порядковый номер (index + 1),  
