@@ -29,29 +29,45 @@ export class ProductsService {
     private readonly _statefulEventEmitterService: StatefulEventEmitterService
   ) {}
 
-/**
- * Загружает список продуктов с сервера и возвращает их в виде Promise.
- * После загрузки данные также публикуются через `StatefulEventEmitterService`
- * с событием `PRODUCTS_CHANGED`, и подписка осуществляется на него.
- *
- * Если данные уже были загружены ранее и сохранены, они будут
- * возвращены из кеша моментально.
- *
- * @param onDestroy Функция, которая принимает колбэк `unsubscribe`.
- *                  Этот колбэк нужно вызвать в случае, если необходимо
- *                  отменить ожидание события (например, при размонтировании компонента)
- *
- * @returns Promise, который резолвится с массивом продуктов, 
- *          как только будет эмитировано событие `PRODUCTS_CHANGED`
- */
-  getAll(onDestroy?: (unsubscribe: () => void) => void): Promise<Product[]> {
-    return this._apiProductsService.getAll()
-      .then(products => {
-        this._statefulEventEmitterService.emit(EventNames.PRODUCTS_CHANGED, products);
-        return this._statefulEventEmitterService.waitFor<Product[]>(
-          EventNames.PRODUCTS_CHANGED,
-          onDestroy
-        );
-      });
+  /**
+   * Загружает список продуктов с API, эмитит событие об обновлении продуктов и подписывается на изменения.
+   * 
+   * @param callback Функция, которая вызывается при каждом обновлении списка продуктов.
+   * @param onDestroy Опциональная функция, принимающая колбэк для отписки от события.
+   *                  Колбэк нужно вызвать, чтобы прекратить подписку (например, при размонтировании компонента).
+   */
+  getAll(
+    callback: (products: Product[]) => void,
+    onDestroy?: (unsubscribe: () => void) => void
+  ): void {
+  this._apiProductsService.getAll()
+    .then(products => {
+      // Сразу эмитируем полученные продукты
+      this._update(products);
+
+      const _callback = (products: Product[]) => {
+        callback(products);
+      };
+      // Подписываемся на обновления через callback
+      this._statefulEventEmitterService.on<Product[]>(EventNames.PRODUCTS_CHANGED, _callback);
+
+      // Позволяем внешнему коду отписаться при необходимости
+      if (onDestroy) {
+        onDestroy(() => {
+          this._statefulEventEmitterService.off(EventNames.PRODUCTS_CHANGED, _callback);
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка при попытке загрузить список товаров', error);
+    });
+  }
+
+  /**
+   * Эмитит событие об обновлении продуктов
+   * @param products Список продуктов
+   */
+  private _update(products: Product[]): void {
+    this._statefulEventEmitterService.emit(EventNames.PRODUCTS_CHANGED, products)
   }
 }

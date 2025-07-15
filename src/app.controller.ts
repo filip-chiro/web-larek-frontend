@@ -55,13 +55,9 @@ export class AppController {
  * Представление получает данные через адаптер, не взаимодействуя напрямую с API или моделью
  */
   private _loadProductsAndRender(): void {
-    this._productsService.getAll()
-      .then(products => {
-        this._galleryComponent.renderProductList(products);
-      })
-      .catch(error => {
-        console.error('Ошибка при попытке загрузить список товаров', error)
-      });
+    this._productsService.getAll((products: Product[]) => {      
+      this._galleryComponent.renderProductList(products);
+    });
   }
 
   /**

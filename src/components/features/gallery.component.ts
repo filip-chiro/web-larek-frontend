@@ -23,6 +23,8 @@ export class GalleryComponent {
    * @param products - массив продуктов для отображения в галерее
    */
   renderProductList(products: Product[]): void {
+    this._galleryElement.innerHTML = '';
+    
     for (const product of products) {
       const cardElement = this._cardCatalogComponent.render(product);
       this._galleryElement.append(cardElement);

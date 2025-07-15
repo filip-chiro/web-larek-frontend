@@ -35,31 +35,6 @@ export class StatefulEventEmitterService extends EventEmitter {
     }
   }
 
-  waitFor<T = any>(
-    eventName: string,
-    onDestroy?: (unsubscribe: () => void) => void
-  ): Promise<T> {
-    return new Promise(resolve => {
-      const cached = this._lastValues.get(eventName);
-      if (cached !== undefined) {
-        resolve(cached);
-        return;
-      }
-
-      const handler = (data: T) => {
-        this.off(eventName, handler);
-        resolve(data);
-      };
-
-      this.on(eventName, handler);
-
-      // Позволяет внешнему коду "зарегистрировать" отмену
-      if (onDestroy) {
-        onDestroy(() => this.off(eventName, handler));
-      }
-    });
-  }
-
   /**
    * Удалить всех подписчиков указанного события и сбросить последнее значение.
    * @param eventName Имя события.
