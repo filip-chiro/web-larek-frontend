@@ -1,15 +1,9 @@
-import { BasketService } from "../../services/basket.service";
-import { Product } from "../../types";
-import { RegisteredElement } from "../../types/component";
-import { cloneTemplate, getProductPriceText } from "../../utils/utils";
+import { BasketService } from "../../../services/basket.service";
+import { Product } from "../../../types";
+import { RegisteredElement } from "../../../types/components/base/component";
+import { getProductPriceText } from "../../../utils/utils";
 import { StatelessComponent } from "./base/stateless.component";
 
-/**
- * Компонент карточки товара в корзине.
- * 
- * Отвечает за создание HTML-элемента списка товара в корзине,
- * заполнение его данными и обработку удаления товара из корзины.
- */
 export class BasketCardComponent extends StatelessComponent<HTMLLIElement> {
   constructor(
     private readonly _basketService: BasketService
@@ -32,12 +26,6 @@ export class BasketCardComponent extends StatelessComponent<HTMLLIElement> {
     return basketCardElement;
   }
 
-  /**
-   * Обработчик удаления товара из корзины.
-   * Вызывает метод сервиса корзины для удаления переданного товара.
-   * 
-   * @param product - товар, который нужно удалить из корзины
-   */
   private _deleteProduct = (product: Product): void => {    
     this._basketService.remove(product);
   }

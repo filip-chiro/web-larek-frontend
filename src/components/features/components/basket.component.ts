@@ -1,41 +1,15 @@
-import { BasketService } from "../../services/basket.service";
-import { ModalService } from "../../services/modal.service";
-import { StatefulEventEmitterService } from "../../services/stateful-event-emitter.service";
-import { EventNames, Product } from "../../types";
+import { BasketService } from "../../../services/basket.service";
+import { StatefulEventEmitterService } from "../../../services/stateful-event-emitter.service";
+import { EventNames, Product } from "../../../types";
+import { BasketComponentData } from "../../../types/components/basket.component";
 import { CachedComponent } from "./base/cached.component";
 import { BasketCardComponent } from "./basket-card.component";
 
-interface BasketComponentData {
-  basketElement: HTMLElement;
-  basketList: HTMLUListElement;
-  priceElement: HTMLElement;
-  submitBtnElement: HTMLButtonElement;
-  listItemEmptyElement: HTMLElement;
-}
-
-/**
- * Компонент представления корзины, реализующий слой **View** в архитектуре MVVM (или MVP).
- *
- * Отвечает исключительно за отображение содержимого корзины и взаимодействие с DOM-элементами,
- * не содержит бизнес-логики, не хранит состояния и не взаимодействует напрямую ни с моделью,
- * ни с контроллером. Получает данные и инструкции исключительно через события.
- * 
- *  Архитектурные особенности:
- *
- * - Использует `StatefulEventEmitterService` (реализация паттерна **EventEmitter**) для подписки на события и инициации пользовательских событий.
- * - Не создает экземпляры модели или контроллера, не зависит от них напрямую.
- * - Не валидирует данные, не изменяет модель, а только реагирует на изменения и инициирует переходы состояний.
- * - Подписывается на события изменения состояния корзины (`EventNames.BASKET`) и перерисовывает DOM при каждом обновлении.
- * - Вызывает событие `EventNames.OPEN_ORDER_ADDRESS_PAYMENT` при нажатии на кнопку оформления заказа, не передавая никаких данных напрямую.
- * - Отписывается от событий при закрытии модального окна (через this._modalService.onClose), избегая утечек памяти.
- *
- */
 export class BasketComponent extends CachedComponent<BasketComponentData> {
   constructor(
     private readonly _basketService: BasketService,
     private readonly _basketCardComponent: BasketCardComponent,
-    private readonly _statefulEventEmitterService: StatefulEventEmitterService,
-    private readonly _modalService: ModalService
+    private readonly _statefulEventEmitterService: StatefulEventEmitterService
   ) {
     super(document.querySelector('#basket'));
   }

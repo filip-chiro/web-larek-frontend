@@ -1,15 +1,9 @@
-import { StatefulEventEmitterService } from "../../services/stateful-event-emitter.service";
-import { EventNames, Product } from "../../types";
-import { RegisteredElement } from "../../types/component";
-import { cloneTemplate, getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../utils/utils";
+import { StatefulEventEmitterService } from "../../../services/stateful-event-emitter.service";
+import { EventNames, Product } from "../../../types";
+import { RegisteredElement } from "../../../types/components/base/component";
+import { getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../../utils/utils";
 import { StatelessComponent } from "./base/stateless.component";
 
-/**
- * Компонент карточки продукта в галерее.
- * 
- * Отвечает за создание DOM-элемента карточки продукта,
- * заполнение его данными продукта и генерацию события при клике.
- */
 export class CardCatalogComponent extends StatelessComponent {
   constructor(
     private readonly _statefulEventEmitterService: StatefulEventEmitterService

@@ -1,5 +1,5 @@
-import { BaseComponent } from "../components/features/base/base.component";
-import { ModalComponent } from "../components/features/modal.component";
+import { BaseComponent } from "../components/features/components/base/base.component";
+import { ModalComponent } from "../components/features/components/base/modal.component";
 import { ComponentRegistryService } from "./component-registry.service";
 
 export class ModalService {

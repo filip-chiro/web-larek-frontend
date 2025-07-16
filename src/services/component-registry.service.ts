@@ -1,20 +1,15 @@
-import { BaseComponent } from "../components/features/base/base.component";
+import { BaseComponent } from "../components/features/components/base/base.component";
+import { ComponentRegistryInfo } from "../types/components/base/component";
 import { hashCode } from "../utils/utils";
 
-interface ComponentInfo {
-  instance: BaseComponent;
-  element: HTMLElement;
-  id: string;
-}
-
 export class ComponentRegistryService {
-  private _byInstance = new WeakMap<BaseComponent, ComponentInfo>();
-  private _byElement = new WeakMap<HTMLElement, ComponentInfo>();
+  private _byInstance = new WeakMap<BaseComponent, ComponentRegistryInfo>();
+  private _byElement = new WeakMap<HTMLElement, ComponentRegistryInfo>();
   private _listeners = new Map<string, Set<() => void>>();
 
   register(instance: BaseComponent, element: HTMLElement): void {
     const id = this._generateId(instance);
-    const info: ComponentInfo = { instance, element, id };
+    const info: ComponentRegistryInfo = { instance, element, id };
     this._byInstance.set(instance, info);
     this._byElement.set(element, info);
     element.dataset.componentId = id;
@@ -26,11 +21,11 @@ export class ComponentRegistryService {
     }
   }
 
-  getByInstance(instance: BaseComponent): ComponentInfo | undefined {
+  getByInstance(instance: BaseComponent): ComponentRegistryInfo | undefined {
     return this._byInstance.get(instance);
   }
 
-  getByElement(element: HTMLElement): ComponentInfo | undefined {
+  getByElement(element: HTMLElement): ComponentRegistryInfo | undefined {
     return this._byElement.get(element);
   }
 

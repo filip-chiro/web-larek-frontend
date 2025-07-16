@@ -1,7 +1,7 @@
-import { ComponentRegistryService } from "../../../services/component-registry.service";
-import { RegisteredElement } from "../../../types/component";
-import { cloneTemplate } from "../../../utils/utils";
-import { inject } from "../di/di-inject";
+import { ComponentRegistryService } from "../../../../services/component-registry.service";
+import { RegisteredElement } from "../../../../types/components/base/component";
+import { cloneTemplate } from "../../../../utils/utils";
+import { inject } from "../../di/di-inject";
 
 /**
  * Базовый абстрактный компонент

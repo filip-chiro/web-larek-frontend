@@ -1,27 +1,9 @@
-import { BasketService } from "../../services/basket.service";
-import { Product } from "../../types";
-import { getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../utils/utils";
+import { BasketService } from "../../../services/basket.service";
+import { Product } from "../../../types";
+import { CardFullData } from "../../../types/components/card-full.component";
+import { getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../../utils/utils";
 import { CachedComponent } from "./base/cached.component";
 
-interface CardFullData {
-  category: HTMLSpanElement;
-  title: HTMLHeadingElement;
-  img: HTMLImageElement;
-  price: HTMLSpanElement;
-  btn: HTMLButtonElement;
-  product: Product
-}
-
-/**
- * Компонент полной карточки товара с подробной информацией.
- * 
- * Основные обязанности:
- * - Отображать данные товара: категория, название, изображение и цену.
- * - Управлять состоянием кнопки добавления/удаления товара из корзины,
- *   учитывая, доступен ли товар (цена не null) и находится ли он уже в корзине.
- * - Обрабатывать клики по кнопке для добавления или удаления товара из корзины,
- *   синхронизируя состояние с BasketService.
- */
 export class CardFullComponent extends CachedComponent<CardFullData> {
   constructor(
     private readonly _basketService: BasketService

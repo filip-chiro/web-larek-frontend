@@ -8,17 +8,17 @@ import { OrderService } from "../../../services/order.service";
 import { ProductsService } from "../../../services/products.service";
 import { StatefulEventEmitterService } from "../../../services/stateful-event-emitter.service";
 import { ValidationOrderService } from "../../../services/validation-order.service";
-import { BasketCardComponent } from "../basket-card.component";
-import { BasketHeaderComponent } from "../basket-header.component";
-import { BasketComponent } from "../basket.component";
-import { CardCatalogComponent } from "../card-catalog.component";
-import { CardFullComponent } from "../card-full.component";
-import { EmailPhoneOrderComponent } from "../email-phone-order.component";
-import { GalleryComponent } from "../gallery.component";
-import { ModalComponent } from "../modal.component";
-import { PaymentAddressOrderComponent } from "../payment-address-order.component";
-import { SuccessOrderComponent } from "../succes-order.component";
+import { BasketCardComponent } from "../components/basket-card.component";
+import { BasketComponent } from "../components/basket.component";
+import { CardCatalogComponent } from "../components/card-catalog.component";
+import { CardFullComponent } from "../components/card-full.component";
+import { EmailPhoneOrderComponent } from "../components/email-phone-order.component";
+import { ModalComponent } from "../components/base/modal.component";
+import { PaymentAddressOrderComponent } from "../components/payment-address-order.component";
+import { SuccessOrderComponent } from "../components/succes-order.component";
 import { container } from "./di-container";
+import { GalleryController } from "../controllers/gallery.controller";
+import { BasketHeaderController } from "../controllers/basket-header.controller";
 
 /**
  * Регистрирует все необходимые зависимости в глобальном DI контейнере.
@@ -40,12 +40,12 @@ export function registerDependencies() {
   container.register(ModalService, { deps: [ModalComponent, ComponentRegistryService] });
 
   container.register(CardCatalogComponent, { deps: [StatefulEventEmitterService] });
-  container.register(GalleryComponent, { deps: [CardCatalogComponent] });
-  container.register(BasketHeaderComponent, { deps: [StatefulEventEmitterService] });
+  container.register(GalleryController, { deps: [CardCatalogComponent] });
+  container.register(BasketHeaderController, { deps: [StatefulEventEmitterService] });
   container.register(BasketService, { deps: [StatefulEventEmitterService] });
   container.register(CardFullComponent, { deps: [BasketService] });
   container.register(BasketCardComponent, { deps: [BasketService] });
-  container.register(BasketComponent, { deps: [BasketService, BasketCardComponent, StatefulEventEmitterService, ModalService] });
+  container.register(BasketComponent, { deps: [BasketService, BasketCardComponent, StatefulEventEmitterService] });
   container.register(OrderService, { deps: [StatefulEventEmitterService, ValidationOrderService, ApiOrderService, BasketService] });
   container.register(PaymentAddressOrderComponent, { deps: [OrderService, StatefulEventEmitterService, ModalService] });
   container.register(EmailPhoneOrderComponent, { deps: [OrderService, ModalService, BasketService] });
@@ -56,8 +56,8 @@ export function registerDependencies() {
     deps: [
       StatefulEventEmitterService,
       ModalService,
-      GalleryComponent,
-      BasketHeaderComponent,
+      GalleryController,
+      BasketHeaderController,
       BasketService,
       CardFullComponent,
       BasketComponent,

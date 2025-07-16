@@ -1,5 +1,5 @@
-import { RegisteredElement } from "../../../types/component";
-import { DI_INIT } from "../di/di-symbols";
+import { RegisteredElement } from "../../../../types/components/base/component";
+import { DI_INIT } from "../../di/di-symbols";
 import { BaseComponent } from "./base.component";
 
 /**

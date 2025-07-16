@@ -1,11 +1,10 @@
-import { BasketHeaderComponent } from "./components/features/basket-header.component";
-import { BasketComponent } from "./components/features/basket.component";
-import { CardFullComponent } from "./components/features/card-full.component";
-import { EmailPhoneOrderComponent } from "./components/features/email-phone-order.component";
-import { GalleryComponent } from "./components/features/gallery.component";
-import { PaymentAddressOrderComponent } from "./components/features/payment-address-order.component";
-import { SuccessOrderComponent } from "./components/features/succes-order.component";
-import { ApiProductsService } from "./services/api-products.service";
+import { BasketComponent } from "./components/features/components/basket.component";
+import { CardFullComponent } from "./components/features/components/card-full.component";
+import { EmailPhoneOrderComponent } from "./components/features/components/email-phone-order.component";
+import { PaymentAddressOrderComponent } from "./components/features/components/payment-address-order.component";
+import { SuccessOrderComponent } from "./components/features/components/succes-order.component";
+import { BasketHeaderController } from "./components/features/controllers/basket-header.controller";
+import { GalleryController } from "./components/features/controllers/gallery.controller";
 import { BasketService } from "./services/basket.service";
 import { ModalService } from "./services/modal.service";
 import { ProductsService } from "./services/products.service";
@@ -28,8 +27,8 @@ export class AppController {
   constructor(
     private readonly _statefulEventEmitterService: StatefulEventEmitterService,
     private readonly _modalService: ModalService,
-    private readonly _galleryComponent: GalleryComponent,
-    private readonly _basketHeaderComponent: BasketHeaderComponent,
+    private readonly _galleryController: GalleryController,
+    private readonly _basketHeaderController: BasketHeaderController,
     private readonly _basketService: BasketService,
     private readonly _cardFullComponent: CardFullComponent,
     private readonly _basketComponent: BasketComponent,
@@ -56,7 +55,7 @@ export class AppController {
  */
   private _loadProductsAndRender(): void {
     this._productsService.getAll((products: Product[]) => {      
-      this._galleryComponent.renderProductList(products);
+      this._galleryController.renderProductList(products);
     });
   }
 
@@ -71,7 +70,7 @@ export class AppController {
     });
 
     this._basketService.onBasket(products => {
-      this._basketHeaderComponent.setQuantityProductsInBasket(products.length);
+      this._basketHeaderController.setQuantityProductsInBasket(products.length);
     });
 
     this._statefulEventEmitterService.on(EventNames.OPEN_CART, () => {

@@ -1,4 +1,3 @@
-import { DIInitializable } from "../../../types";
 import { DIConstructor, DIInjectable, DIProvider } from "../../../types/di";
 import { DI_INIT } from "./di-symbols";
 

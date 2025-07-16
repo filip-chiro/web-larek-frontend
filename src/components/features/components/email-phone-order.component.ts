@@ -1,33 +1,9 @@
-import { BasketService } from "../../services/basket.service";
-import { ModalService } from "../../services/modal.service";
-import { OrderService } from "../../services/order.service";
+import { BasketService } from "../../../services/basket.service";
+import { ModalService } from "../../../services/modal.service";
+import { OrderService } from "../../../services/order.service";
+import { EmailPhoneOrderData } from "../../../types/components/email-phone-order.component";
 import { CachedComponent } from "./base/cached.component";
 
-interface EmailPhoneOrderData {
-  inputEmail: HTMLInputElement;
-  inputPhone: HTMLInputElement;
-  submitButton: HTMLButtonElement;
-  formErrors: HTMLSpanElement;
-  emailErrorEl: HTMLSpanElement;
-  phoneErrorEl: HTMLSpanElement;
-}
-
-/**
- * Компонент формы ввода Email и телефона для оформления заказа.
- * 
- * Основные принципы:
- * - Обновление данных в модели происходит непосредственно при событии `input`,
- *   то есть при каждом изменении пользовательского ввода.
- * - Валидация данных выполняется в модели (OrderService) и ValidationOrderService,
- *   представление (этот компонент) **не выполняет валидацию и не хранит данные формы**.
- * - Представление только отображает текущее состояние модели, 
- *   включая ошибки валидации, полученные через подписку на события.
- * - Кнопка отправки формы блокируется/разблокируется в зависимости от валидности данных в модели.
- * - Передача данных между слоем представления и моделью(OrderService) происходит через StatefulEventEmitterService, который в свою очередь наследуется от базового EventEmitter, что обеспечивает реактивность и разделение ответственности.
- * 
- * Это гарантирует, что форма заказа никак не зависит от корзины,
- * и не хранит собственное состояние — все данные централизованно управляются через OrderService
- */
 export class EmailPhoneOrderComponent extends CachedComponent<EmailPhoneOrderData> {
   constructor(
     private readonly _orderService: OrderService,
@@ -77,7 +53,7 @@ export class EmailPhoneOrderComponent extends CachedComponent<EmailPhoneOrderDat
       submitButton.disabled = !state.isValid;
     });
 
-    this._cachedElement.addEventListener('submit', (event) => {
+    this._cachedElement.addEventListener('submit', (event: SubmitEvent) => {
       event.preventDefault();
       this._orderService.submit();
       if (this._orderService.isValid) {
