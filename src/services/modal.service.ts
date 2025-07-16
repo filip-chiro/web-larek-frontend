@@ -12,7 +12,6 @@ export class ModalService {
   private _onCloseListeners = new Map<HTMLElement, Set<() => void>>();
   private _pendingCloseListeners = new WeakMap<BaseComponent | HTMLElement, Set<() => void>>();
   private _pendingCloseOnceListeners = new WeakMap<BaseComponent | HTMLElement, Set<() => void>>();
-  private _isProgrammaticClose = false;
 
   constructor(
     private readonly _modalComponent: ModalComponent,
@@ -26,6 +25,7 @@ export class ModalService {
   ): void {
     const element = this._resolveElement(content, renderArgs);
 
+    // Закрываем текущую модалку
     if (this._currentModal) {
       this._handleModalClose(this._currentModal);
       this._invokeRegularCloseCallbacks(this._currentModal.element);
@@ -47,13 +47,14 @@ export class ModalService {
     this._modalComponent.open(element, {
       onOpen: options?.onOpen,
       onClose: () => {
-        // Только ручное закрытие должно приводить к сбросу currentModal
-        if (!this._isProgrammaticClose) {
-          this._handleModalClose(this._currentModal!);
-          this._invokeRegularCloseCallbacks(element);
-          onceListeners.forEach((cb) => cb());
-          this._currentModal = null;
-        }
+        // Всегда вызывается при любом закрытии
+        this._handleModalClose(this._currentModal);
+        this._invokeRegularCloseCallbacks(element);
+      },
+      onCloseOnce: () => {
+        // Только ручное закрытие — сбрасываем состояние
+        onceListeners.forEach((cb) => cb());
+        this._currentModal = null;
       },
     });
 
@@ -69,22 +70,20 @@ export class ModalService {
   close(content: BaseComponent | HTMLElement): void {
     if (!this._currentModal) return;
 
-    if (this._isComponent(content)) {
-      if (this._currentModal.component !== content) return;
-    } else {
-      if (this._currentModal.element !== content) return;
-    }
+    const isSame =
+      this._isComponent(content)
+        ? this._currentModal.component === content
+        : this._currentModal.element === content;
 
-    // Программное закрытие
-    this._isProgrammaticClose = true;
+    if (!isSame) return;
+
+    // Программное закрытие — не вызывает onCloseOnce
     this._modalComponent.close();
-    this._isProgrammaticClose = false;
 
     this._handleModalClose(this._currentModal);
     this._invokeRegularCloseCallbacks(this._currentModal.element);
 
-    // НЕ обнуляем _currentModal — это должен делать только onClose при ручном закрытии
-    // Если хочешь — можно добавить опцию, чтобы close() по желанию обнулял currentModal
+    // Не обнуляем _currentModal — onCloseOnce этого не требует
   }
 
   onClose(target: BaseComponent | HTMLElement, callback: () => void): void {
@@ -103,7 +102,6 @@ export class ModalService {
 
   onCloseOnce(target: BaseComponent | HTMLElement, callback: () => void): void {
     setTimeout(() => {
-      // Мы всегда добавляем в pending, потому что onCloseOnce должен быть вызван ТОЛЬКО вручную
       this._addPendingListener(this._pendingCloseOnceListeners, target, callback);
     }, 0);
   }

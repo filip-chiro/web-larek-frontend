@@ -41,7 +41,7 @@ export class CardFullComponent extends CachedComponent<CardFullData> {
   }
 
   protected _afterInit(): void {
-    this._cachedData.category.classList.remove('card__category_soft');
+    this._cachedData.category.className = '';
     this._cachedData.btn.addEventListener('click', () => {
       if (this._cachedData.product !== null) {
         this._renderBtnText(this._cachedData.product, this._cachedData.btn);
@@ -50,23 +50,32 @@ export class CardFullComponent extends CachedComponent<CardFullData> {
   }
 
   protected _update(product: Product): void {
+    const {
+      category,
+      title,
+      img,
+      price,
+      btn
+    } = this._cachedData
+
     this._cachedData.product = product;
-    this._cachedData.category.textContent = product.category;
-    this._cachedData.category.classList.add(getProductCategoryCssClass(product.category));
+    category.textContent = product.category;
+    category.className = '';
+    category.classList.add('card__category', getProductCategoryCssClass(product.category));
 
-    this._cachedData.title.textContent = product.title;
-    this._cachedData.img.alt = product.title;
-    this._cachedData.img.src = getCdnImgUrl(product.image);
-
-    this._cachedData.price.textContent = getProductPriceText(product.price);
+    title.textContent = product.title;
+    img.alt = product.title;
+    img.src = getCdnImgUrl(product.image);
+    price.textContent = getProductPriceText(product.price);
 
     const isInBasket = this._basketService.getById(product.id);
 
     if (product.price === null) {
-      this._cachedData.btn.disabled = true;
-      this._cachedData.btn.textContent = 'Недоступно';
+      btn.disabled = true;
+      btn.textContent = 'Недоступно';
     } else {
-      this._cachedData.btn.textContent = isInBasket ? 'Удалить из корзины' : 'Купить';
+      btn.disabled = false;
+      btn.textContent = isInBasket ? 'Удалить из корзины' : 'Купить';
     }
   }
 

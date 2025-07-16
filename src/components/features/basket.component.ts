@@ -7,9 +7,10 @@ import { BasketCardComponent } from "./basket-card.component";
 
 interface BasketComponentData {
   basketElement: HTMLElement;
-  listElement: HTMLUListElement;
+  basketList: HTMLUListElement;
   priceElement: HTMLElement;
   submitBtnElement: HTMLButtonElement;
+  listItemEmptyElement: HTMLElement;
 }
 
 /**
@@ -40,17 +41,29 @@ export class BasketComponent extends CachedComponent<BasketComponentData> {
   }
 
   protected _initCachedData(): BasketComponentData {
+    const listItemEmptyElement = document.createElement('div');
+    const basketList = this._cachedElement.querySelector<HTMLUListElement>('.basket__list');
+    const basketListContent = document.createElement('div');
+
+    listItemEmptyElement.classList.add('basket__list-empty');
+    basketListContent.classList.add('basket__list-content');
+    basketList.parentElement.insertBefore(basketListContent, basketList);
+    basketListContent.appendChild(listItemEmptyElement);
+    basketListContent.appendChild(basketList);
+
     return {
       basketElement: this._cachedElement,
-      listElement: this._cachedElement.querySelector<HTMLUListElement>('.basket__list'),
+      basketList: basketList,
       priceElement: this._cachedElement.querySelector<HTMLSpanElement>('.basket__price'),
-      submitBtnElement: this._cachedElement.querySelector<HTMLButtonElement>('.basket__button')
+      submitBtnElement: this._cachedElement.querySelector<HTMLButtonElement>('.basket__button'),
+      listItemEmptyElement: listItemEmptyElement
     };
   }
 
   protected _afterInit(): void {
     const {
-      listElement,
+      basketList,
+      listItemEmptyElement,
       priceElement,
       submitBtnElement
     } = this._cachedData;
@@ -58,60 +71,37 @@ export class BasketComponent extends CachedComponent<BasketComponentData> {
     const getPriceBasket = () => this._basketService.getPriceBasket();
 
     const renderAll = (products: Product[] = []) => {
-      listElement.textContent = '';
-      this._renderActionsInfo(submitBtnElement, priceElement, listElement, getPriceBasket());
-      this._appendBasketElements(listElement, products);
+      basketList.textContent = '';
+      this._renderActionsInfo(submitBtnElement, priceElement, listItemEmptyElement, getPriceBasket());
+      this._appendBasketElements(basketList, products);
     };
 
     renderAll();
 
-    const onBasketCallback = (products: Product[]) => renderAll(products);
-
-    this._basketService.onBasket(onBasketCallback);
+    this._basketService.onBasket((products: Product[]) => renderAll(products));
 
     submitBtnElement.addEventListener('click', () => {
       this._statefulEventEmitterService.emit(EventNames.OPEN_ORDER_ADDRESS_PAYMENT);
     });
   }
 
-  /**
-   * Вспомогательный метод для добавления DOM-элементов товаров в список корзины.
-   * 
-   * @param listElement - контейнер списка корзины
-   * @param products - массив продуктов, которые необходимо отобразить
-   */
-  private _appendBasketElements(listElement: HTMLUListElement, products: Product[]): void {
-    listElement.textContent = '';
+  private _appendBasketElements(basketList: HTMLUListElement, products: Product[]): void {
+    basketList.textContent = '';
     
     for (let i = 0; i < products.length; i++) {
       const basketCardElement = this._basketCardComponent.render(products[i], i);
-      listElement.appendChild(basketCardElement);
+      basketList.appendChild(basketCardElement);
     }
   }
 
-  /**
-   * Вспомогательный метод для обновления информации о стоимости корзины,
-   * а также управления состоянием кнопки оформления и отображением пустой корзины.
-   * 
-   * @param submitBtnElement - кнопка оформления заказа
-   * @param priceElement - элемент для отображения общей стоимости
-   * @param listElement - контейнер списка корзины
-   * @param priceBasket - сумма стоимости товаров в корзине
-   */
   private _renderActionsInfo(
     submitBtnElement: HTMLButtonElement,
     priceElement: HTMLSpanElement,
-    listElement: HTMLUListElement,
+    listItemEmptyElement: HTMLElement,
     priceBasket: number
-  ): void {
+  ): void {    
     submitBtnElement.disabled = priceBasket === 0;
-
     priceElement.textContent = `${priceBasket} синапсов`;
-    if (priceBasket === 0) {
-      const listItemEmptyElement = document.createElement('div');
-      listItemEmptyElement.classList.add('basket__list-empty');
-      listItemEmptyElement.textContent = 'Корзина пуста';
-      listElement.appendChild(listItemEmptyElement);
-    }
+    listItemEmptyElement.textContent = priceBasket === 0 ? 'Корзина пуста' : '';
   }
 }
