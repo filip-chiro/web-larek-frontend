@@ -77,7 +77,7 @@ export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddress
       this._orderService.setAddress(inputAddress.value);
     });
 
-    const unsubscribe = this._orderService.onFormStateChange(['address'], (state) => {
+    this._orderService.onFormStateChange(['address'], (state) => {
       errors.textContent = state.errors.address ?? '';
       submitBtn.disabled = !state.isValid;
     });
@@ -89,21 +89,10 @@ export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddress
 
     // при закрытии модалки ручном (крестик, ESC) сбрасываем состояние заказа
     this._modalService.onCloseOnce(this, () => {
-      console.log(1);
-      
       this._orderService.clear();
-      unsubscribe();
     });
   }
 
-  /**
-   * Устанавливает выбранный способ оплаты в модель (OrderService)
-   * и обновляет отображение активной кнопки.
-   *
-   * @param currentMethod - Новый способ оплаты ('online' или 'offline').
-   * @param btnOnline - Кнопка "Онлайн".
-   * @param btnOffline - Кнопка "При получении".
-   */
   private _setPaymentMethod(
     currentMethod: Payment,
     btnOnline: HTMLButtonElement,
@@ -113,13 +102,6 @@ export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddress
     this._updatePaymentButtonStyles(currentMethod, btnOnline, btnOffline);
   }
 
-  /**
-   * Обновляет CSS-классы активного состояния для кнопок способов оплаты.
-   *
-   * @param method - Выбранный способ оплаты.
-   * @param btnOnline - Кнопка "Онлайн".
-   * @param btnOffline - Кнопка "При получении".
-   */
   private _updatePaymentButtonStyles(
     method: Payment,
     btnOnline: HTMLButtonElement,
@@ -127,6 +109,22 @@ export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddress
   ): void {
     btnOnline.classList.toggle('button_alt-active', method === 'online');
     btnOffline.classList.toggle('button_alt-active', method === 'offline');
+  }
+
+  protected _update(): void {
+    const {
+      btnOnline,
+      btnOffline,
+      submitBtn,
+      inputAddress,
+      errors
+    } = this._cachedData;
+    
+    this._setPaymentMethod('online', btnOnline, btnOffline);
+
+    inputAddress.value = '';
+    submitBtn.disabled = true;
+    errors.textContent = '';
   }
 
 }

@@ -57,26 +57,20 @@ export class BasketComponent extends CachedComponent<BasketComponentData> {
 
     const getPriceBasket = () => this._basketService.getPriceBasket();
 
-    const renderAll = () => {
+    const renderAll = (products: Product[] = []) => {
       listElement.textContent = '';
       this._renderActionsInfo(submitBtnElement, priceElement, listElement, getPriceBasket());
-      this._appendBasketElements(listElement, this._basketService.getAll());
+      this._appendBasketElements(listElement, products);
     };
 
     renderAll();
 
-    const onBasketCallback = () => renderAll();
+    const onBasketCallback = (products: Product[]) => renderAll(products);
 
     this._basketService.onBasket(onBasketCallback);
 
     submitBtnElement.addEventListener('click', () => {
       this._statefulEventEmitterService.emit(EventNames.OPEN_ORDER_ADDRESS_PAYMENT);
-      this._basketService.offBasket(onBasketCallback);
-    });
-
-    // Удаление подписки при закрытии
-    this._modalService.onClose(this, () => {
-      this._basketService.offBasket(onBasketCallback);
     });
   }
 
@@ -87,6 +81,8 @@ export class BasketComponent extends CachedComponent<BasketComponentData> {
    * @param products - массив продуктов, которые необходимо отобразить
    */
   private _appendBasketElements(listElement: HTMLUListElement, products: Product[]): void {
+    listElement.textContent = '';
+    
     for (let i = 0; i < products.length; i++) {
       const basketCardElement = this._basketCardComponent.render(products[i], i);
       listElement.appendChild(basketCardElement);

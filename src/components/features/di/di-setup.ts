@@ -37,7 +37,7 @@ export function registerDependencies() {
   container.register(StatefulEventEmitterService);
   container.register(ValidationOrderService);
   container.register(ModalComponent);
-  container.register(ModalService, { deps: [ModalComponent] });
+  container.register(ModalService, { deps: [ModalComponent, ComponentRegistryService] });
 
   container.register(CardCatalogComponent, { deps: [StatefulEventEmitterService] });
   container.register(GalleryComponent, { deps: [CardCatalogComponent] });

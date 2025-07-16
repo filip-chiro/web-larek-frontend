@@ -86,7 +86,7 @@ export class AppController {
       this._modalService.open(this._emailPhoneOrderComponent);
     });
 
-    this._statefulEventEmitterService.on(EventNames.OPEN_SUCCESS_ORDER, (res: CreateOrderResponse) => {
+    this._statefulEventEmitterService.on(EventNames.OPEN_SUCCESS_ORDER, (res: CreateOrderResponse) => {      
       this._modalService.open(this._successOrderComponent.render(res));
     });
   }

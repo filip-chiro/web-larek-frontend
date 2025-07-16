@@ -71,7 +71,7 @@ export class EmailPhoneOrderComponent extends CachedComponent<EmailPhoneOrderDat
       this._orderService.updatePhone(inputPhone.value);
     });
 
-    const subsFormState = this._orderService.onFormStateChange(['email', 'phone'], (state) => {      
+    this._orderService.onFormStateChange(['email', 'phone'], (state) => {      
       emailErrorEl.innerHTML = `${state.errors.email ?? ''}<br>`;
       phoneErrorEl.innerHTML = state.errors.phone ?? '';
       submitButton.disabled = !state.isValid;
@@ -80,13 +80,27 @@ export class EmailPhoneOrderComponent extends CachedComponent<EmailPhoneOrderDat
     this._cachedElement.addEventListener('submit', (event) => {
       event.preventDefault();
       this._orderService.submit();
+      if (this._orderService.isValid) {
+        this._orderService.clear();
+        this._basketService.clear();
+      }
     });
 
-    this._modalService.onClose(this, () => {
-      subsFormState();
+    this._modalService.onCloseOnce(this, () => {
       this._orderService.clear();
-      this._basketService.clear();
     });
+  }
+
+  private _clearElements(): void {
+    this._cachedData.inputEmail.value = '';
+    this._cachedData.inputPhone.value = '';
+    this._cachedData.submitButton.disabled = true;
+    this._cachedData.emailErrorEl.textContent = '';
+    this._cachedData.phoneErrorEl.textContent = '';
+  }
+
+  protected _update(): void {
+    this._clearElements();
   }
   
 }

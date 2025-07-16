@@ -38,7 +38,7 @@ export class BasketCardComponent extends StatelessComponent<HTMLLIElement> {
    * 
    * @param product - товар, который нужно удалить из корзины
    */
-  private _deleteProduct = (product: Product): void => {
+  private _deleteProduct = (product: Product): void => {    
     this._basketService.remove(product);
   }
 }

@@ -1,5 +1,6 @@
 import { BaseComponent } from "../components/features/base/base.component";
 import { ModalComponent } from "../components/features/modal.component";
+import { ComponentRegistryService } from "./component-registry.service";
 
 export class ModalService {
   private _currentModal: {
@@ -9,12 +10,14 @@ export class ModalService {
   } | null = null;
 
   private _onCloseListeners = new Map<HTMLElement, Set<() => void>>();
-  private _onCloseOnceListeners = new Map<HTMLElement, Set<() => void>>();
-
   private _pendingCloseListeners = new WeakMap<BaseComponent | HTMLElement, Set<() => void>>();
   private _pendingCloseOnceListeners = new WeakMap<BaseComponent | HTMLElement, Set<() => void>>();
+  private _isProgrammaticClose = false;
 
-  constructor(private readonly _modalComponent: ModalComponent) {}
+  constructor(
+    private readonly _modalComponent: ModalComponent,
+    private readonly _componentRegistryService: ComponentRegistryService
+  ) {}
 
   open(
     content: BaseComponent | HTMLElement,
@@ -25,74 +28,89 @@ export class ModalService {
 
     if (this._currentModal) {
       this._handleModalClose(this._currentModal);
-      this._invokeAllCloseCallbacks(this._currentModal.element);
+      this._invokeRegularCloseCallbacks(this._currentModal.element);
     }
+
+    const onceListeners = this._collectPendingOnceListeners(content);
+    const regularListeners = this._collectPendingRegularListeners(content);
+
+    let component = this._isComponent(content)
+      ? content
+      : this._componentRegistryService.getByElement(content)?.instance;
 
     this._currentModal = {
       element,
-      component: this._isComponent(content) ? content : undefined,
-      onClose: options?.onClose
+      component,
+      onClose: options?.onClose,
     };
 
     this._modalComponent.open(element, {
       onOpen: options?.onOpen,
       onClose: () => {
-        this._handleModalClose(this._currentModal!);
-        this._invokeAllCloseCallbacks(element);
-        this._currentModal = null;
-      }
+        // Только ручное закрытие должно приводить к сбросу currentModal
+        if (!this._isProgrammaticClose) {
+          this._handleModalClose(this._currentModal!);
+          this._invokeRegularCloseCallbacks(element);
+          onceListeners.forEach((cb) => cb());
+          this._currentModal = null;
+        }
+      },
     });
 
-    this._flushPendingListeners(content, element);
-  }
-
-  close(content: BaseComponent | HTMLElement): void {
-    const element = this._resolveElement(content);
-    if (!this._currentModal || this._currentModal.element !== element) return;
-
-    this._modalComponent.close(); // вызовет onClose из open
-  }
-
-  onClose(target: BaseComponent | HTMLElement, callback: () => void): void {
-    setTimeout(() => this._onClose(target, callback), 0);
-  }
-
-  private _onClose(content: BaseComponent | HTMLElement, callback: () => void): void {
-    const element = this._getElementIfOpen(content);
-    if (element) {
+    if (regularListeners.length > 0) {
       if (!this._onCloseListeners.has(element)) {
         this._onCloseListeners.set(element, new Set());
       }
-      this._onCloseListeners.get(element)!.add(callback);
-    } else {
-      this._addPendingListener(this._pendingCloseListeners, content, callback);
+      const set = this._onCloseListeners.get(element)!;
+      regularListeners.forEach((cb) => set.add(cb));
     }
   }
 
-  onCloseOnce(content: BaseComponent | HTMLElement, callback: () => void): void {
-    setTimeout(() => this._onCloseOnce(content, callback), 0);
+  close(content: BaseComponent | HTMLElement): void {
+    if (!this._currentModal) return;
+
+    if (this._isComponent(content)) {
+      if (this._currentModal.component !== content) return;
+    } else {
+      if (this._currentModal.element !== content) return;
+    }
+
+    // Программное закрытие
+    this._isProgrammaticClose = true;
+    this._modalComponent.close();
+    this._isProgrammaticClose = false;
+
+    this._handleModalClose(this._currentModal);
+    this._invokeRegularCloseCallbacks(this._currentModal.element);
+
+    // НЕ обнуляем _currentModal — это должен делать только onClose при ручном закрытии
+    // Если хочешь — можно добавить опцию, чтобы close() по желанию обнулял currentModal
   }
 
-  private _onCloseOnce(content: BaseComponent | HTMLElement, callback: () => void): void {
-    const element = this._getElementIfOpen(content);
-    if (element) {
-      if (!this._onCloseOnceListeners.has(element)) {
-        this._onCloseOnceListeners.set(element, new Set());
+  onClose(target: BaseComponent | HTMLElement, callback: () => void): void {
+    setTimeout(() => {
+      const element = this._getElementIfOpen(target);
+      if (element) {
+        if (!this._onCloseListeners.has(element)) {
+          this._onCloseListeners.set(element, new Set());
+        }
+        this._onCloseListeners.get(element)!.add(callback);
+      } else {
+        this._addPendingListener(this._pendingCloseListeners, target, callback);
       }
-      this._onCloseOnceListeners.get(element)!.add(callback);
-    } else {
-      this._addPendingListener(this._pendingCloseOnceListeners, content, callback);
-    }
+    }, 0);
   }
 
-  private _invokeAllCloseCallbacks(element: HTMLElement): void {
-    const once = this._onCloseOnceListeners.get(element);
+  onCloseOnce(target: BaseComponent | HTMLElement, callback: () => void): void {
+    setTimeout(() => {
+      // Мы всегда добавляем в pending, потому что onCloseOnce должен быть вызван ТОЛЬКО вручную
+      this._addPendingListener(this._pendingCloseOnceListeners, target, callback);
+    }, 0);
+  }
+
+  private _invokeRegularCloseCallbacks(element: HTMLElement): void {
     const regular = this._onCloseListeners.get(element);
-
-    once?.forEach(cb => cb());
-    this._onCloseOnceListeners.delete(element);
-
-    regular?.forEach(cb => cb());
+    regular?.forEach((cb) => cb());
   }
 
   private _handleModalClose(modal: {
@@ -100,7 +118,7 @@ export class ModalService {
     component?: BaseComponent;
     onClose?: () => void;
   }): void {
-    modal.onClose?.();
+    modal?.onClose?.();
   }
 
   private _resolveElement(content: BaseComponent | HTMLElement, renderArgs?: any[] | any): HTMLElement {
@@ -136,25 +154,17 @@ export class ModalService {
     storage.get(target)!.add(callback);
   }
 
-  private _flushPendingListeners(
-    source: BaseComponent | HTMLElement,
-    resolvedElement: HTMLElement
-  ): void {
-    const copyAndClear = (map: WeakMap<any, Set<() => void>>): Set<() => void> => {
-      const listeners = map.get(source);
-      if (!listeners) return new Set();
-      map.delete(source);
-      return listeners;
-    };
+  private _collectPendingRegularListeners(target: BaseComponent | HTMLElement): (() => void)[] {
+    const listeners = this._pendingCloseListeners.get(target);
+    if (!listeners) return [];
+    this._pendingCloseListeners.delete(target);
+    return Array.from(listeners);
+  }
 
-    const once = copyAndClear(this._pendingCloseOnceListeners);
-    const regular = copyAndClear(this._pendingCloseListeners);
-
-    if (once.size > 0) {
-      this._onCloseOnceListeners.set(resolvedElement, new Set(once));
-    }
-    if (regular.size > 0) {
-      this._onCloseListeners.set(resolvedElement, new Set(regular));
-    }
+  private _collectPendingOnceListeners(target: BaseComponent | HTMLElement): (() => void)[] {
+    const listeners = this._pendingCloseOnceListeners.get(target);
+    if (!listeners) return [];
+    this._pendingCloseOnceListeners.delete(target);
+    return Array.from(listeners);
   }
 }
