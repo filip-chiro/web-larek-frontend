@@ -36,12 +36,11 @@ export class SuccessOrderComponent extends CachedComponent<SuccessOrderData> {
 
   protected _afterInit(): void {
     const {
-      successOrderElement,
       successBtnElement
     } = this._cachedData;
 
     successBtnElement.addEventListener('click', () => {
-      this._modalService.close(successOrderElement);
+      this._modalService.close(this);
     });
   }
 

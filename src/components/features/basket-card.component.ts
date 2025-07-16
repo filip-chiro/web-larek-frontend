@@ -1,5 +1,6 @@
 import { BasketService } from "../../services/basket.service";
 import { Product } from "../../types";
+import { RegisteredElement } from "../../types/component";
 import { cloneTemplate, getProductPriceText } from "../../utils/utils";
 import { StatelessComponent } from "./base/stateless.component";
 
@@ -9,15 +10,15 @@ import { StatelessComponent } from "./base/stateless.component";
  * Отвечает за создание HTML-элемента списка товара в корзине,
  * заполнение его данными и обработку удаления товара из корзины.
  */
-export class BasketCardComponent extends StatelessComponent {
+export class BasketCardComponent extends StatelessComponent<HTMLLIElement> {
   constructor(
     private readonly _basketService: BasketService
   ) {
     super(document.querySelector('#card-basket'));
   }
 
-  render(product: Product, index: number): HTMLLIElement {
-    const basketCardElement = cloneTemplate<HTMLLIElement>(this._template);
+  render(product: Product, index: number): RegisteredElement<HTMLLIElement> {
+    const basketCardElement = this._cloneTemplate();
     const basketItemIndexElemet = basketCardElement.querySelector<HTMLSpanElement>('.basket__item-index');
     const basketItemTitleElement = basketCardElement.querySelector<HTMLSpanElement>('.card__title');
     const basketItemPriceElement = basketCardElement.querySelector<HTMLSpanElement>('.card__price');

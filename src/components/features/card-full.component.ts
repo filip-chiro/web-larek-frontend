@@ -23,8 +23,6 @@ interface CardFullData {
  *   синхронизируя состояние с BasketService.
  */
 export class CardFullComponent extends CachedComponent<CardFullData> {
-  protected readonly _template: HTMLTemplateElement;
-
   constructor(
     private readonly _basketService: BasketService
   ) {

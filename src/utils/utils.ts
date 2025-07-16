@@ -156,3 +156,7 @@ export function getProductCategoryCssClass(category: ProductCategory): string {
 export function getCdnImgUrl(img: string): string {
     return `${CDN_URL}/${img}`;
 }
+
+export function hashCode(obj: any): string {
+  return (Math.random() * 1e9 >>> 0).toString(36);
+}

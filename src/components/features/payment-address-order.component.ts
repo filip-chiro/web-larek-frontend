@@ -33,7 +33,7 @@ interface PaymentAddressOrderData {
  * Архитектура гарантирует, что форма заказа не зависит от корзины и не хранит локальное состояние —
  * все данные централизованно управляются через OrderService и распространяются посредством событий.
  */
-export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddressOrderData> {
+export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddressOrderData, HTMLFormElement> {
   constructor(
     private readonly _orderService: OrderService,
     private readonly _statefulEventEmitterService: StatefulEventEmitterService,
@@ -49,7 +49,7 @@ export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddress
       inputAddress: this._cachedElement.querySelector<HTMLInputElement>('[name="address"]'),
       submitBtn: this._cachedElement.querySelector<HTMLButtonElement>('.order__button'),
       errors: this._cachedElement.querySelector<HTMLSpanElement>('.form__errors'),
-      form: this._cachedElement as HTMLFormElement
+      form: this._cachedElement
     };
   }
 
@@ -89,6 +89,8 @@ export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddress
 
     // при закрытии модалки ручном (крестик, ESC) сбрасываем состояние заказа
     this._modalService.onCloseOnce(this, () => {
+      console.log(1);
+      
       this._orderService.clear();
       unsubscribe();
     });

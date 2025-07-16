@@ -1,5 +1,6 @@
 import { StatefulEventEmitterService } from "../../services/stateful-event-emitter.service";
 import { EventNames, Product } from "../../types";
+import { RegisteredElement } from "../../types/component";
 import { cloneTemplate, getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../utils/utils";
 import { StatelessComponent } from "./base/stateless.component";
 
@@ -10,16 +11,14 @@ import { StatelessComponent } from "./base/stateless.component";
  * заполнение его данными продукта и генерацию события при клике.
  */
 export class CardCatalogComponent extends StatelessComponent {
-  protected readonly _template: HTMLTemplateElement;
-
   constructor(
     private readonly _statefulEventEmitterService: StatefulEventEmitterService
   ) {
     super(document.querySelector('#card-catalog'));
   }
 
-  render(product: Product): HTMLElement {
-    const cardCatalogElement = cloneTemplate(this._template);
+  render(product: Product): RegisteredElement {
+    const cardCatalogElement = this._cloneTemplate();
     const cardCategory = cardCatalogElement.querySelector<HTMLSpanElement>('.card__category');
     const cardTitle = cardCatalogElement.querySelector<HTMLHeadingElement>('.card__title');
     const cardImg = cardCatalogElement.querySelector<HTMLImageElement>('.card__image');

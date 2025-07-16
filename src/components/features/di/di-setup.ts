@@ -2,6 +2,7 @@ import { AppController } from "../../../app.controller";
 import { ApiOrderService } from "../../../services/api-order.service";
 import { ApiProductsService } from "../../../services/api-products.service";
 import { BasketService } from "../../../services/basket.service";
+import { ComponentRegistryService } from "../../../services/component-registry.service";
 import { ModalService } from "../../../services/modal.service";
 import { OrderService } from "../../../services/order.service";
 import { ProductsService } from "../../../services/products.service";
@@ -30,6 +31,7 @@ import { container } from "./di-container";
  * и передать все необходимые зависимости.
  */
 export function registerDependencies() {
+  container.register(ComponentRegistryService);
   container.register(ApiOrderService);
   container.register(ApiProductsService);
   container.register(StatefulEventEmitterService);

@@ -1,7 +1,7 @@
 import './scss/styles.scss';
 import { AppController } from './app.controller';
-import { container } from './components/features/di/di-container';
 import { registerDependencies } from './components/features/di/di-setup';
+import { inject } from './components/features/di/di-inject';
 
 /**
  * Точка входа в приложение.
@@ -16,6 +16,6 @@ import { registerDependencies } from './components/features/di/di-setup';
 
 registerDependencies();
 
-const appController = container.resolve(AppController);
+const appController = inject(AppController);
 
 appController.init();
