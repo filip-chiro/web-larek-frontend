@@ -1,5 +1,5 @@
+import { BaseComponent } from "../components/features/base/base.component";
 import { ModalComponent } from "../components/features/modal.component";
-import { Component } from "../types";
 
 /**
  * Сервис для управления модальными окнами.
@@ -13,7 +13,7 @@ import { Component } from "../types";
 export class ModalService {
   private _currentModal: {
     element: HTMLElement;
-    component?: Component;
+    component?: BaseComponent;
     onClose?: () => void;
   } | null = null;
 
@@ -23,11 +23,16 @@ export class ModalService {
   constructor(private readonly _modalComponent: ModalComponent) {}
 
   open(
-    content: Component | HTMLElement,
+    content: BaseComponent | HTMLElement,
     renderArgs?: any[] | any,
     options?: { onOpen?: () => void; onClose?: () => void }
   ): void {
+    console.log('open', this);
+    
     const element = this._resolveElement(content, renderArgs);
+
+    console.log(this._isComponent(content));
+    
 
     if (this._isComponent(content)) {
       (content as any).__modalElement = element;
@@ -42,7 +47,7 @@ export class ModalService {
 
     const modal = {
       element,
-      component: this._isComponent(content) ? (content as Component) : undefined,
+      component: this._isComponent(content) ? (content as BaseComponent) : undefined,
       onClose: options?.onClose,
     };
 
@@ -60,7 +65,9 @@ export class ModalService {
     });
   }
 
-  close(content: Component | HTMLElement): void {
+  close(content: BaseComponent | HTMLElement): void {
+    console.log('close', this);
+    
     if (!this._currentModal) return;
 
     let elementToClose: HTMLElement;
@@ -84,12 +91,15 @@ export class ModalService {
     this._modalComponent.close();
   }
 
-  onClose(target: Component | HTMLElement, callback: () => void): void {
+  onClose(target: BaseComponent | HTMLElement, callback: () => void): void {
     setTimeout(() => this._onClose(target, callback), 0);
   }
 
-  private _onClose(content: Component | HTMLElement, callback: () => void): void {
+  private _onClose(content: BaseComponent | HTMLElement, callback: () => void): void {
     let element: HTMLElement;
+
+    console.log('onClose', this);
+    
 
     if (this._isComponent(content)) {
       const maybeRendered = (content as any).__modalElement;
@@ -109,11 +119,11 @@ export class ModalService {
     this._onCloseListeners.get(element)!.add(callback);
   }
 
-  onCloseOnce(target: Component | HTMLElement, callback: () => void): void {
+  onCloseOnce(target: BaseComponent | HTMLElement, callback: () => void): void {
     setTimeout(() => this._onCloseOnce(target, callback), 0);
   }
 
-  private _onCloseOnce(content: Component | HTMLElement, callback: () => void): void {
+  private _onCloseOnce(content: BaseComponent | HTMLElement, callback: () => void): void {
     let element: HTMLElement;
 
     if (this._isComponent(content)) {
@@ -164,14 +174,13 @@ export class ModalService {
 
   private _handleModalClose(modal: {
     element: HTMLElement;
-    component?: Component;
+    component?: BaseComponent;
     onClose?: () => void;
   }): void {
-    modal.component?.onClose?.();
     modal.onClose?.();
   }
 
-  private _resolveElement(content: Component | HTMLElement, renderArgs?: any[] | any): HTMLElement {
+  private _resolveElement(content: BaseComponent | HTMLElement, renderArgs?: any[] | any): HTMLElement {
     if (this._isComponent(content)) {
       if (Array.isArray(renderArgs)) {
         return content.render(...renderArgs);
@@ -185,7 +194,7 @@ export class ModalService {
     }
   }
 
-  private _isComponent(obj: any): obj is Component {
+  private _isComponent(obj: any): obj is BaseComponent {
     return typeof obj === 'object' && typeof obj.render === 'function';
   }
 }

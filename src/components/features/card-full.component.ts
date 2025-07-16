@@ -1,6 +1,16 @@
 import { BasketService } from "../../services/basket.service";
-import { Component, Product } from "../../types";
-import { cloneTemplate, getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../utils/utils";
+import { Product } from "../../types";
+import { getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../utils/utils";
+import { CachedComponent } from "./base/cached.component";
+
+interface CardFullData {
+  category: HTMLSpanElement;
+  title: HTMLHeadingElement;
+  img: HTMLImageElement;
+  price: HTMLSpanElement;
+  btn: HTMLButtonElement;
+  product: Product
+}
 
 /**
  * Компонент полной карточки товара с подробной информацией.
@@ -12,48 +22,58 @@ import { cloneTemplate, getCdnImgUrl, getProductCategoryCssClass, getProductPric
  * - Обрабатывать клики по кнопке для добавления или удаления товара из корзины,
  *   синхронизируя состояние с BasketService.
  */
-export class CardFullComponent implements Component {
-  private readonly _template: HTMLTemplateElement;
+export class CardFullComponent extends CachedComponent<CardFullData> {
+  protected readonly _template: HTMLTemplateElement;
 
-  constructor(private readonly _basketService: BasketService) {
-    this._template = document.querySelector('#card-preview')!;
+  constructor(
+    private readonly _basketService: BasketService
+  ) {
+    super(document.querySelector('#card-preview'));
   }
 
-  render(product: Product): HTMLElement {
-    // здесь не происходит поиск в корневом дереве. происходит получение старого элемента по ссылке и каждый раз происходит поиск внутри клонированного элемента. не происходит поиск в корневом дереве. нельзя записывать элементы в this, так как это по функционалу класса метод render может вызываться сколько угодно раз и прошлые клонированные элементы в this не будут хранить реальное состояние
-    const element = cloneTemplate(this._template);
-    const category = element.querySelector<HTMLSpanElement>('.card__category')!;
-    const title = element.querySelector<HTMLHeadingElement>('.card__title')!;
-    const img = element.querySelector<HTMLImageElement>('.card__image')!;
-    const price = element.querySelector<HTMLSpanElement>('.card__price')!;
-    const btn = element.querySelector<HTMLButtonElement>('.card__button')!;
+  protected _initCachedData(): CardFullData {
+    return {
+      category: this._cachedElement.querySelector<HTMLSpanElement>('.card__category'),
+      title: this._cachedElement.querySelector<HTMLHeadingElement>('.card__title'),
+      img: this._cachedElement.querySelector<HTMLImageElement>('.card__image'),
+      price: this._cachedElement.querySelector<HTMLSpanElement>('.card__price'),
+      btn: this._cachedElement.querySelector<HTMLButtonElement>('.card__button'),
+      product: null
+    };
+  }
 
-    category.textContent = product.category;
-    category.classList.remove('card__category_soft');
-    category.classList.add(getProductCategoryCssClass(product.category));
+  protected _afterInit(): void {
+    this._cachedData.category.classList.remove('card__category_soft');
+    this._cachedData.btn.addEventListener('click', () => {
+      if (this._cachedData.product !== null) {
+        this._renderBtnText(this._cachedData.product, this._cachedData.btn);
+      }
+    });
+  }
 
-    title.textContent = product.title;
-    img.alt = product.title;
-    img.src = getCdnImgUrl(product.image);
+  protected _update(product: Product): void {
+    this._cachedData.product = product;
+    this._cachedData.category.textContent = product.category;
+    this._cachedData.category.classList.add(getProductCategoryCssClass(product.category));
 
-    price.textContent = getProductPriceText(product.price);
+    this._cachedData.title.textContent = product.title;
+    this._cachedData.img.alt = product.title;
+    this._cachedData.img.src = getCdnImgUrl(product.image);
 
-    const isInBasket = !!this._basketService.getById(product.id);
+    this._cachedData.price.textContent = getProductPriceText(product.price);
+
+    const isInBasket = this._basketService.getById(product.id);
 
     if (product.price === null) {
-      btn.disabled = true;
-      btn.textContent = 'Недоступно';
+      this._cachedData.btn.disabled = true;
+      this._cachedData.btn.textContent = 'Недоступно';
     } else {
-      btn.textContent = isInBasket ? 'Удалить из корзины' : 'Купить';
+      this._cachedData.btn.textContent = isInBasket ? 'Удалить из корзины' : 'Купить';
     }
-
-    btn.addEventListener('click', () => this._handleBtnClick(product, btn));
-
-    return element;
   }
 
-  private _handleBtnClick(product: Product, btn: HTMLButtonElement): void {
-    const isInBasket = !!this._basketService.getById(product.id);
+  private _renderBtnText(product: Product, btn: HTMLButtonElement): void {
+    const isInBasket = this._basketService.getById(product.id);
 
     if (isInBasket) {
       this._basketService.remove(product);

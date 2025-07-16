@@ -1,6 +1,7 @@
 import { BasketService } from "../../services/basket.service";
-import { Component, Product } from "../../types";
+import { Product } from "../../types";
 import { cloneTemplate, getProductPriceText } from "../../utils/utils";
+import { StatelessComponent } from "./base/stateless.component";
 
 /**
  * Компонент карточки товара в корзине.
@@ -8,26 +9,15 @@ import { cloneTemplate, getProductPriceText } from "../../utils/utils";
  * Отвечает за создание HTML-элемента списка товара в корзине,
  * заполнение его данными и обработку удаления товара из корзины.
  */
-export class BasketCardComponent implements Component {
-  private readonly _basketCardTemplate: HTMLTemplateElement;
-
+export class BasketCardComponent extends StatelessComponent {
   constructor(
     private readonly _basketService: BasketService
   ) {
-    this._basketCardTemplate = document.querySelector('#card-basket');
+    super(document.querySelector('#card-basket'));
   }
 
-  /**
-   * Создаёт DOM-элемент для товара в корзине на основе шаблона,
-   * заполняет элемент информацией о товаре и индексом,
-   * навешивает обработчик для кнопки удаления товара.
-   * 
-   * @param product - объект товара для отображения
-   * @param index - индекс товара в списке корзины (для отображения порядкового номера)
-   * @returns HTMLLIElement - готовый элемент товара в корзине
-   */
   render(product: Product, index: number): HTMLLIElement {
-    const basketCardElement = cloneTemplate<HTMLLIElement>(this._basketCardTemplate);
+    const basketCardElement = cloneTemplate<HTMLLIElement>(this._template);
     const basketItemIndexElemet = basketCardElement.querySelector<HTMLSpanElement>('.basket__item-index');
     const basketItemTitleElement = basketCardElement.querySelector<HTMLSpanElement>('.card__title');
     const basketItemPriceElement = basketCardElement.querySelector<HTMLSpanElement>('.card__price');

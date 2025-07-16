@@ -1,8 +1,16 @@
 import { BasketService } from "../../services/basket.service";
 import { ModalService } from "../../services/modal.service";
 import { OrderService } from "../../services/order.service";
-import { Component } from "../../types";
-import { cloneTemplate } from "../../utils/utils";
+import { CachedComponent } from "./base/cached.component";
+
+interface EmailPhoneOrderData {
+  inputEmail: HTMLInputElement;
+  inputPhone: HTMLInputElement;
+  submitButton: HTMLButtonElement;
+  formErrors: HTMLSpanElement;
+  emailErrorEl: HTMLSpanElement;
+  phoneErrorEl: HTMLSpanElement;
+}
 
 /**
  * Компонент формы ввода Email и телефона для оформления заказа.
@@ -20,31 +28,42 @@ import { cloneTemplate } from "../../utils/utils";
  * Это гарантирует, что форма заказа никак не зависит от корзины,
  * и не хранит собственное состояние — все данные централизованно управляются через OrderService
  */
-export class EmailPhoneOrderComponent implements Component {
-  private readonly _template: HTMLTemplateElement;
-
+export class EmailPhoneOrderComponent extends CachedComponent<EmailPhoneOrderData> {
   constructor(
     private readonly _orderService: OrderService,
     private readonly _modalService: ModalService,
     private readonly _basketService: BasketService
   ) {
-    this._template = document.querySelector('#contacts')!;
+    super(document.querySelector('#contacts'));
   }
 
-  render(): HTMLElement {
-    // здесь не происходит поиск в корневом дереве. происходит получение старого элемента по ссылке и каждый раз происходит поиск внутри клонированного элемента. не происходит поиск в корневом дереве. нельзя записывать элементы в this, так как это по функционалу класса метод render может вызываться сколько угодно раз и прошлые клонированные элементы в this не будут хранить реальное состояние
-    const element = cloneTemplate(this._template);
-
-    const inputEmail = element.querySelector<HTMLInputElement>('input[name="email"]')!;
-    const inputPhone = element.querySelector<HTMLInputElement>('input[name="phone"]')!;
-    const submitButton = element.querySelector<HTMLButtonElement>('button[type="submit"]')!;
-    const formErrors = element.querySelector<HTMLSpanElement>('.form__errors')!;
-
+  protected _initCachedData(): EmailPhoneOrderData {
     const emailErrorEl = document.createElement('span');
     const phoneErrorEl = document.createElement('span');
+    const formErrors = this._cachedElement.querySelector<HTMLSpanElement>('.form__errors')
+
     formErrors.append(emailErrorEl, phoneErrorEl);
 
-    inputEmail.addEventListener('input', () => {
+    return {
+      inputEmail: this._cachedElement.querySelector<HTMLInputElement>('input[name="email"]'),
+      inputPhone: this._cachedElement.querySelector<HTMLInputElement>('input[name="phone"]'),
+      submitButton: this._cachedElement.querySelector<HTMLButtonElement>('button[type="submit"]'),
+      formErrors: formErrors,
+      emailErrorEl: emailErrorEl,
+      phoneErrorEl: phoneErrorEl
+    };
+  }
+
+  protected _afterInit(): void {
+    const {
+      inputEmail,
+      inputPhone,
+      submitButton,
+      emailErrorEl,
+      phoneErrorEl
+    } = this._cachedData;
+
+    this._cachedData.inputEmail.addEventListener('input', () => {
       this._orderService.updateEmail(inputEmail.value);
     });
 
@@ -58,7 +77,7 @@ export class EmailPhoneOrderComponent implements Component {
       submitButton.disabled = !state.isValid;
     });
 
-    element.addEventListener('submit', (event) => {
+    this._cachedElement.addEventListener('submit', (event) => {
       event.preventDefault();
       this._orderService.submit();
     });
@@ -68,7 +87,6 @@ export class EmailPhoneOrderComponent implements Component {
       this._orderService.clear();
       this._basketService.clear();
     });
-
-    return element;
   }
+  
 }

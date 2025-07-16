@@ -1,0 +1,1 @@
+export const DI_INIT = Symbol('di_init');

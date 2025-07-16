@@ -1,9 +1,16 @@
 import { BasketService } from "../../services/basket.service";
 import { ModalService } from "../../services/modal.service";
 import { StatefulEventEmitterService } from "../../services/stateful-event-emitter.service";
-import { Component, EventNames, Product } from "../../types";
-import { cloneTemplate } from "../../utils/utils";
+import { EventNames, Product } from "../../types";
+import { CachedComponent } from "./base/cached.component";
 import { BasketCardComponent } from "./basket-card.component";
+
+interface BasketComponentData {
+  basketElement: HTMLElement;
+  listElement: HTMLUListElement;
+  priceElement: HTMLElement;
+  submitBtnElement: HTMLButtonElement;
+}
 
 /**
  * Компонент представления корзины, реализующий слой **View** в архитектуре MVVM (или MVP).
@@ -22,30 +29,32 @@ import { BasketCardComponent } from "./basket-card.component";
  * - Отписывается от событий при закрытии модального окна (через this._modalService.onClose), избегая утечек памяти.
  *
  */
-export class BasketComponent implements Component {
-  private readonly _basketTemplate: HTMLTemplateElement;
-
+export class BasketComponent extends CachedComponent<BasketComponentData> {
   constructor(
     private readonly _basketService: BasketService,
     private readonly _basketCardComponent: BasketCardComponent,
     private readonly _statefulEventEmitterService: StatefulEventEmitterService,
     private readonly _modalService: ModalService
   ) {
-    this._basketTemplate = document.querySelector('#basket')!;
+    super(document.querySelector('#basket'));
   }
 
-  /**
-   * Рендерит корзину, создавая DOM-элемент на основе шаблона и текущего состояния корзины.
-   * Устанавливает обработчики кликов и подписки на изменения корзины.
-   * 
-   * @returns HTMLElement, готовый к вставке в DOM.
-   */
-  render(): HTMLElement {
-    // здесь не происходит поиск в корневом дереве. происходит получение старого элемента по ссылке и каждый раз происходит поиск внутри клонированного элемента. не происходит поиск в корневом дереве. нельзя записывать элементы в this, так как это по функционалу класса метод render может вызываться сколько угодно раз и прошлые клонированные элементы в this не будут хранить реальное состояние
-    const basketElement = cloneTemplate(this._basketTemplate);
-    const listElement = basketElement.querySelector<HTMLUListElement>('.basket__list')!;
-    const priceElement = basketElement.querySelector<HTMLSpanElement>('.basket__price')!;
-    const submitBtnElement = basketElement.querySelector<HTMLButtonElement>('.basket__button')!;
+  protected _initCachedData(): BasketComponentData {
+    return {
+      basketElement: this._cachedElement,
+      listElement: this._cachedElement.querySelector<HTMLUListElement>('.basket__list'),
+      priceElement: this._cachedElement.querySelector<HTMLSpanElement>('.basket__price'),
+      submitBtnElement: this._cachedElement.querySelector<HTMLButtonElement>('.basket__button')
+    };
+  }
+
+  protected _afterInit(): void {
+    const {
+      listElement,
+      priceElement,
+      submitBtnElement
+    } = this._cachedData;
+
     const getPriceBasket = () => this._basketService.getPriceBasket();
 
     const renderAll = () => {
@@ -58,19 +67,17 @@ export class BasketComponent implements Component {
 
     const onBasketCallback = () => renderAll();
 
+    this._basketService.onBasket(onBasketCallback);
+
     submitBtnElement.addEventListener('click', () => {
       this._statefulEventEmitterService.emit(EventNames.OPEN_ORDER_ADDRESS_PAYMENT);
       this._basketService.offBasket(onBasketCallback);
     });
 
-    this._basketService.onBasket(onBasketCallback);
-
     // Удаление подписки при закрытии
     this._modalService.onClose(this, () => {
       this._basketService.offBasket(onBasketCallback);
     });
-
-    return basketElement;
   }
 
   /**
@@ -101,7 +108,8 @@ export class BasketComponent implements Component {
     listElement: HTMLUListElement,
     priceBasket: number
   ): void {
-    if (priceBasket === 0) submitBtnElement.disabled = true;
+    submitBtnElement.disabled = priceBasket === 0;
+
     priceElement.textContent = `${priceBasket} синапсов`;
     if (priceBasket === 0) {
       const listItemEmptyElement = document.createElement('div');

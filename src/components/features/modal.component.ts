@@ -14,14 +14,13 @@ export class ModalComponent {
   private _openCallback: () => void = () => {};
   private _closeCallback: () => void = () => {};
   private _isOpen = false;
-
   private _pointerDownInsideModal = false;
   private _pointerUpInsideModal = false;
 
   constructor() {
-    this._modalContainerElement = document.querySelector('#modal-container')!;
-    this._modalContentElement = this._modalContainerElement.querySelector('.modal__content')!;
-    this._modalCloseElement = this._modalContainerElement.querySelector('.modal__close')!;
+    this._modalContainerElement = document.querySelector('#modal-container');
+    this._modalContentElement = this._modalContainerElement.querySelector('.modal__content');
+    this._modalCloseElement = this._modalContainerElement.querySelector('.modal__close');
   }
 
   /**

@@ -1,6 +1,7 @@
 import { StatefulEventEmitterService } from "../../services/stateful-event-emitter.service";
-import { Component, EventNames, Product } from "../../types";
+import { EventNames, Product } from "../../types";
 import { cloneTemplate, getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../utils/utils";
+import { StatelessComponent } from "./base/stateless.component";
 
 /**
  * Компонент карточки продукта в галерее.
@@ -8,25 +9,17 @@ import { cloneTemplate, getCdnImgUrl, getProductCategoryCssClass, getProductPric
  * Отвечает за создание DOM-элемента карточки продукта,
  * заполнение его данными продукта и генерацию события при клике.
  */
-export class CardCatalogComponent implements Component {
-  private readonly _cardCatalogTemplateElement: HTMLTemplateElement;
+export class CardCatalogComponent extends StatelessComponent {
+  protected readonly _template: HTMLTemplateElement;
 
   constructor(
     private readonly _statefulEventEmitterService: StatefulEventEmitterService
   ) {
-    this._cardCatalogTemplateElement = document.querySelector('#card-catalog');
+    super(document.querySelector('#card-catalog'));
   }
 
-  /**
-   * Создаёт DOM-элемент карточки продукта на основе шаблона,
-   * заполняет его данными и навешивает обработчик клика.
-   * 
-   * @param product - объект продукта для отображения
-   * @returns HTMLElement - готовый элемент карточки продукта
-   */
   render(product: Product): HTMLElement {
-    // здесь не происходит поиск в корневом дереве. происходит получение старого элемента по ссылке и каждый раз происходит поиск внутри клонированного элемента. не происходит поиск в корневом дереве. нельзя записывать элементы в this, так как это по функционалу класса метод render может вызываться сколько угодно раз и прошлые клонированные элементы в this не будут хранить реальное состояние
-    const cardCatalogElement = cloneTemplate(this._cardCatalogTemplateElement);
+    const cardCatalogElement = cloneTemplate(this._template);
     const cardCategory = cardCatalogElement.querySelector<HTMLSpanElement>('.card__category');
     const cardTitle = cardCatalogElement.querySelector<HTMLHeadingElement>('.card__title');
     const cardImg = cardCatalogElement.querySelector<HTMLImageElement>('.card__image');

@@ -1,4 +1,6 @@
+import { DIInitializable } from "../../../types";
 import { DIConstructor, DIInjectable, DIProvider } from "../../../types/di";
+import { DI_INIT } from "./di-symbols";
 
 /**
  * Контейнер для управления зависимостями (DI) с поддержкой синглтонов и transient-сервисов.
@@ -58,8 +60,12 @@ class DIContainer {
     }
 
     const dependencies = (DIProvider.deps || []).map(dep => this.resolve(dep));
-
     const instance = new DIProvider.useClass(...dependencies);
+
+    // только контейнер знает про этот Symbol
+    if (typeof (instance as any)[DI_INIT] === 'function') {
+      (instance as any)[DI_INIT]();
+    }
 
     if (DIProvider.scope !== 'transient') {
       this._singletons.set(name, instance);

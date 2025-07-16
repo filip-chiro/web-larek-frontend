@@ -55,7 +55,7 @@ export interface Order {
   items: string[];
 }
 
-export interface Component {
-  [x: string]: any;
-  render(...args: any[]): HTMLElement;
+export interface DIInitializable {
+  /** Только для DIContainer */
+  __di_init?(): void;
 }

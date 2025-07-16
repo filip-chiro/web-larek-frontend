@@ -1,8 +1,18 @@
 import { ModalService } from "../../services/modal.service";
 import { OrderService } from "../../services/order.service";
 import { StatefulEventEmitterService } from "../../services/stateful-event-emitter.service";
-import { Component, EventNames, Payment } from "../../types";
+import { EventNames, Payment } from "../../types";
 import { cloneTemplate } from "../../utils/utils";
+import { CachedComponent } from "./base/cached.component";
+
+interface PaymentAddressOrderData {
+  btnOnline: HTMLButtonElement;
+  btnOffline: HTMLButtonElement;
+  inputAddress: HTMLInputElement;
+  submitBtn: HTMLButtonElement;
+  errors: HTMLSpanElement;
+  form: HTMLFormElement;
+}
 
 /**
  * Компонент формы ввода адреса и выбора способа оплаты для оформления заказа.
@@ -23,32 +33,35 @@ import { cloneTemplate } from "../../utils/utils";
  * Архитектура гарантирует, что форма заказа не зависит от корзины и не хранит локальное состояние —
  * все данные централизованно управляются через OrderService и распространяются посредством событий.
  */
-export class PaymentAddressOrderComponent implements Component {
-  private readonly _template: HTMLTemplateElement;
-
+export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddressOrderData> {
   constructor(
     private readonly _orderService: OrderService,
     private readonly _statefulEventEmitterService: StatefulEventEmitterService,
     private readonly _modalService: ModalService
   ) {
-    this._template = document.querySelector('#order')!;
+    super(document.querySelector('#order'));
   }
 
-  /**
-   * Рендерит форму с полем ввода адреса и кнопками выбора способа оплаты (наличные или карта).
-   * Также настраивает реактивное отображение ошибок валидации и отключение кнопки сабмита.
-   *
-   * @returns {HTMLElement} HTML-элемент формы для вставки в DOM.
-   */
-  render(): HTMLElement {
-    // здесь не происходит поиск в корневом дереве. происходит получение старого элемента по ссылке и каждый раз происходит поиск внутри клонированного элемента. не происходит поиск в корневом дереве. нельзя записывать элементы в this, так как это по функционалу класса метод render может вызываться сколько угодно раз и прошлые клонированные элементы в this не будут хранить реальное состояние
-    const element = cloneTemplate(this._template);
-    const btnOnline = element.querySelector<HTMLButtonElement>('[name="card"]')!;
-    const btnOffline = element.querySelector<HTMLButtonElement>('[name="cash"]')!;
-    const inputAddress = element.querySelector<HTMLInputElement>('[name="address"]')!;
-    const submitBtn = element.querySelector<HTMLButtonElement>('.order__button')!;
-    const errors = element.querySelector<HTMLSpanElement>('.form__errors')!;
-    const form = element;
+  protected _initCachedData(): PaymentAddressOrderData {
+    return {
+      btnOnline: this._cachedElement.querySelector<HTMLButtonElement>('[name="card"]'),
+      btnOffline: this._cachedElement.querySelector<HTMLButtonElement>('[name="cash"]'),
+      inputAddress: this._cachedElement.querySelector<HTMLInputElement>('[name="address"]'),
+      submitBtn: this._cachedElement.querySelector<HTMLButtonElement>('.order__button'),
+      errors: this._cachedElement.querySelector<HTMLSpanElement>('.form__errors'),
+      form: this._cachedElement as HTMLFormElement
+    };
+  }
+
+  protected _afterInit(): void {
+    const {
+      btnOnline,
+      btnOffline,
+      inputAddress,
+      submitBtn,
+      errors,
+      form
+    } = this._cachedData;
 
     this._setPaymentMethod('online', btnOnline, btnOffline);
 
@@ -79,8 +92,23 @@ export class PaymentAddressOrderComponent implements Component {
       this._orderService.clear();
       unsubscribe();
     });
+  }
 
-    return element;
+  /**
+   * Устанавливает выбранный способ оплаты в модель (OrderService)
+   * и обновляет отображение активной кнопки.
+   *
+   * @param currentMethod - Новый способ оплаты ('online' или 'offline').
+   * @param btnOnline - Кнопка "Онлайн".
+   * @param btnOffline - Кнопка "При получении".
+   */
+  private _setPaymentMethod(
+    currentMethod: Payment,
+    btnOnline: HTMLButtonElement,
+    btnOffline: HTMLButtonElement
+  ): void {
+    this._orderService.setPaymentMethod(currentMethod);
+    this._updatePaymentButtonStyles(currentMethod, btnOnline, btnOffline);
   }
 
   /**
@@ -99,21 +127,4 @@ export class PaymentAddressOrderComponent implements Component {
     btnOffline.classList.toggle('button_alt-active', method === 'offline');
   }
 
-  
-  /**
-   * Устанавливает выбранный способ оплаты в модель (OrderService)
-   * и обновляет отображение активной кнопки.
-   *
-   * @param currentMethod - Новый способ оплаты ('online' или 'offline').
-   * @param btnOnline - Кнопка "Онлайн".
-   * @param btnOffline - Кнопка "При получении".
-   */
-  private _setPaymentMethod(
-    currentMethod: Payment,
-    btnOnline: HTMLButtonElement,
-    btnOffline: HTMLButtonElement
-  ): void {
-    this._orderService.setPaymentMethod(currentMethod);
-    this._updatePaymentButtonStyles(currentMethod, btnOnline, btnOffline);
-  }
 }
