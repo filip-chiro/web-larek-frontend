@@ -10,7 +10,7 @@ export class BasketService {
   constructor(
     private readonly _statefulEventEmitterService: StatefulEventEmitterService
   ) {
-    
+    this._setProducts([]);
   }
 
   /**
@@ -19,7 +19,7 @@ export class BasketService {
    * @returns {Product[]} Массив товаров в корзине.
    */
   getAll(): Product[] {
-    const productsInBasket = this._statefulEventEmitterService.getLast(EventNames.BASKET);
+    const productsInBasket = this._statefulEventEmitterService.getLast(EventNames.BASKET_CHANGED);
 
     if (productsInBasket === undefined) {
       return [];
@@ -67,9 +67,9 @@ export class BasketService {
       return;
     }
 
-    this._statefulEventEmitterService.emit(`add-card-to-basket-${product.id}`, product);
+    this._statefulEventEmitterService.emitCached(`add-card-to-basket-${product.id}`, product);
     this._statefulEventEmitterService.offAllByEventName(`remove-card-to-basket-${product.id}`);
-    this._statefulEventEmitterService.emit(EventNames.BASKET, [...productsInBasket, product]);
+    this._statefulEventEmitterService.emitCached(EventNames.BASKET_CHANGED, [...productsInBasket, product]);
   }
 
   /**
@@ -83,25 +83,21 @@ export class BasketService {
     const filteredProductsInBasket = productsInBasket.filter(item => item.id !== product.id);
 
     this._statefulEventEmitterService.offAllByEventName(`add-card-to-basket-${product.id}`);
-    this._statefulEventEmitterService.emit(`remove-card-to-basket-${product.id}`, product);
-    this._statefulEventEmitterService.emit(EventNames.BASKET, filteredProductsInBasket);
+    this._statefulEventEmitterService.emitCached(`remove-card-to-basket-${product.id}`, product);
+    this._statefulEventEmitterService.emitCached(EventNames.BASKET_CHANGED, filteredProductsInBasket);
   }
 
   /**
    * Подписаться на обновления корзины.
-   * Вызывается при каждом изменении списка товаров.
+   * Вызывается при каждом изменении списка товаров, с возможностью отписки
    * @param {(products: Product[]) => void} callback Коллбек с массивом товаров.
    */
-  onBasket(callback: (products: Product[]) => void) {
-    this._statefulEventEmitterService.on(EventNames.BASKET, callback);
-  }
+  onBasket(callback: (products: Product[]) => void): { unsubscribe: () => void } {
+    this._statefulEventEmitterService.onCached(EventNames.BASKET_CHANGED, callback);
 
-  /**
-   * Отписаться от обновлений корзины.
-   * @param {(products: Product[]) => void} callback Ранее добавленный обработчик.
-   */
-  offBasket(callback: (products: Product[]) => void): void {
-    this._statefulEventEmitterService.off(EventNames.BASKET, callback);
+    return {
+      unsubscribe: () => this._offBasket(callback)
+    };
   }
 
   /**
@@ -111,7 +107,7 @@ export class BasketService {
    * @param {(product: Product) => void} callback Коллбек с товаром.
    */
   onBasketById(id: string, callback: (product: Product) => void) {
-    this._statefulEventEmitterService.on(`add-card-to-basket-${id}`, callback);
+    this._statefulEventEmitterService.onCached(`add-card-to-basket-${id}`, callback);
   }
 
   /**
@@ -128,8 +124,18 @@ export class BasketService {
    * Эмитит событие с пустым списком.
    */
   clear(): void {
-    this._statefulEventEmitterService.emit(EventNames.BASKET, []);
+    this._statefulEventEmitterService.emitCached(EventNames.BASKET_CHANGED, []);
   }
 
-  
+  /**
+   * Отписаться от обновлений корзины.
+   * @param {(products: Product[]) => void} callback Ранее добавленный обработчик.
+   */
+  private _offBasket(callback: (products: Product[]) => void): void {
+    this._statefulEventEmitterService.off(EventNames.BASKET_CHANGED, callback);
+  }
+
+  private _setProducts(products: Product[]) {
+    this._statefulEventEmitterService.emitCached(EventNames.BASKET_CHANGED, products);
+  }
 }

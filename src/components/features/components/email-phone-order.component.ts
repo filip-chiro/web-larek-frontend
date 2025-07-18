@@ -10,53 +10,54 @@ export class EmailPhoneOrderComponent extends CachedComponent<EmailPhoneOrderDat
     private readonly _modalService: ModalService,
     private readonly _basketService: BasketService
   ) {
-    super(document.querySelector('#contacts'));
+    const template = document.querySelector<HTMLTemplateElement>('#contacts'); // получение шаблона
+    super(template); // получение узлов из дерева только при старте конструктора
   }
 
+  /**
+   * Инициализация кэшированных данных, вызывается при старте конструктора (происходит в CachedComponent)
+   * Сохраняет результат вызова этой функции в this._cachedData
+   */
   protected _initCachedData(): EmailPhoneOrderData {
     const emailErrorEl = document.createElement('span');
     const phoneErrorEl = document.createElement('span');
-    const formErrors = this._cachedElement.querySelector<HTMLSpanElement>('.form__errors')
+    const formErrors = this._clonedTemplate.querySelector<HTMLSpanElement>('.form__errors')
 
     formErrors.append(emailErrorEl, phoneErrorEl);
 
     return {
-      inputEmail: this._cachedElement.querySelector<HTMLInputElement>('input[name="email"]'),
-      inputPhone: this._cachedElement.querySelector<HTMLInputElement>('input[name="phone"]'),
-      submitButton: this._cachedElement.querySelector<HTMLButtonElement>('button[type="submit"]'),
+      inputEmail: this._clonedTemplate.querySelector<HTMLInputElement>('input[name="email"]'),
+      inputPhone: this._clonedTemplate.querySelector<HTMLInputElement>('input[name="phone"]'),
+      submitButton: this._clonedTemplate.querySelector<HTMLButtonElement>('button[type="submit"]'),
       formErrors: formErrors,
       emailErrorEl: emailErrorEl,
       phoneErrorEl: phoneErrorEl
     };
   }
 
+  /**
+   * Вызывается один раз после старта конструктора и создания this._cachedData
+   */
   protected _afterInit(): void {
-    const {
-      inputEmail,
-      inputPhone,
-      submitButton,
-      emailErrorEl,
-      phoneErrorEl
-    } = this._cachedData;
-
     this._cachedData.inputEmail.addEventListener('input', () => {
-      this._orderService.updateEmail(inputEmail.value);
+      this._orderService.updateEmail(this._cachedData.inputEmail.value);
     });
 
-    inputPhone.addEventListener('input', () => {
-      this._orderService.updatePhone(inputPhone.value);
+    this._cachedData.inputPhone.addEventListener('input', () => {
+      this._orderService.updatePhone(this._cachedData.inputPhone.value);
     });
 
     this._orderService.onFormStateChange(['email', 'phone'], (state) => {      
-      emailErrorEl.innerHTML = `${state.errors.email ?? ''}<br>`;
-      phoneErrorEl.innerHTML = state.errors.phone ?? '';
-      submitButton.disabled = !state.isValid;
+      this._cachedData.emailErrorEl.innerHTML = `${state.errors.email ?? ''}<br>`;
+      this._cachedData.phoneErrorEl.innerHTML = state.errors.phone ?? '';
+      this._cachedData.submitButton.disabled = !state.isValid;
     });
 
-    this._cachedElement.addEventListener('submit', (event: SubmitEvent) => {
+    this._clonedTemplate.addEventListener('submit', (event: SubmitEvent) => {
       event.preventDefault();
-      this._orderService.submit();
+      
       if (this._orderService.isValid) {
+        this._orderService.submit();
         this._orderService.clear();
         this._basketService.clear();
       }
@@ -75,6 +76,9 @@ export class EmailPhoneOrderComponent extends CachedComponent<EmailPhoneOrderDat
     this._cachedData.phoneErrorEl.textContent = '';
   }
 
+  /**
+   * Вызывается каждый раз, когда вызывается публичный метод render
+   */
   protected _update(): void {
     this._clearElements();
   }

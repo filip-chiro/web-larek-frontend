@@ -8,22 +8,12 @@ import { EventEmitter, EventName } from "../components/base/events";
 export class StatefulEventEmitterService extends EventEmitter {
   private _lastValues: Map<string, any> = new Map();
 
-  /**
-   * Переопределение emit для сохранения последнего значения события.
-   * @param eventName Имя события.
-   * @param data Данные события.
-   */
-  override emit<T extends any>(eventName: string, data?: T): void {
+  emitCached<T extends any>(eventName: string, data?: T): void {
     this._lastValues.set(eventName, data);
     super.emit(eventName, data);
   }
 
-  /**
-   * Переопределение on для вызова обработчика сразу с последним значением.
-   * @param eventName Имя события.
-   * @param callback Обработчик события.
-   */
-  override on<T extends any>(
+  onCached<T extends any>(
     eventName: EventName,
     callback: (event: T) => void
   ): void {

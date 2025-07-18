@@ -1,3 +1,4 @@
+import { EventEmitter } from "./components/base/events";
 import { BasketComponent } from "./components/features/components/basket.component";
 import { CardFullComponent } from "./components/features/components/card-full.component";
 import { EmailPhoneOrderComponent } from "./components/features/components/email-phone-order.component";
@@ -8,7 +9,6 @@ import { GalleryController } from "./components/features/controllers/gallery.con
 import { BasketService } from "./services/basket.service";
 import { ModalService } from "./services/modal.service";
 import { ProductsService } from "./services/products.service";
-import { StatefulEventEmitterService } from "./services/stateful-event-emitter.service";
 import { CreateOrderResponse, EventNames, Product } from "./types";
 
 /**
@@ -25,7 +25,7 @@ import { CreateOrderResponse, EventNames, Product } from "./types";
  */
 export class AppController {
   constructor(
-    private readonly _statefulEventEmitterService: StatefulEventEmitterService,
+    private readonly _eventEmitter: EventEmitter,
     private readonly _modalService: ModalService,
     private readonly _galleryController: GalleryController,
     private readonly _basketHeaderController: BasketHeaderController,
@@ -65,27 +65,27 @@ export class AppController {
    * @private
    */
   private _initCustomEventListeners(): void {
-    this._statefulEventEmitterService.on(EventNames.OPEN_CARD_FULL, (product: Product) => {
+    this._eventEmitter.on(EventNames.OPEN_CARD_FULL, (product: Product) => {
       this._modalService.open(this._cardFullComponent.render(product));
     });
 
-    this._basketService.onBasket(products => {
+    this._basketService.onBasket(products => {      
       this._basketHeaderController.setQuantityProductsInBasket(products.length);
     });
 
-    this._statefulEventEmitterService.on(EventNames.OPEN_CART, () => {
+    this._eventEmitter.on(EventNames.OPEN_BASKET, () => {
       this._modalService.open(this._basketComponent);
     });
 
-    this._statefulEventEmitterService.on(EventNames.OPEN_ORDER_ADDRESS_PAYMENT, () => {
+    this._eventEmitter.on(EventNames.OPEN_ORDER_ADDRESS_PAYMENT, () => {
       this._modalService.open(this._paymentAddressOrderComponent);
     });
 
-    this._statefulEventEmitterService.on(EventNames.OPEN_ORDER_EMAIL_PHONE, () => {
+    this._eventEmitter.on(EventNames.OPEN_ORDER_EMAIL_PHONE, () => {
       this._modalService.open(this._emailPhoneOrderComponent);
     });
 
-    this._statefulEventEmitterService.on(EventNames.OPEN_SUCCESS_ORDER, (res: CreateOrderResponse) => {      
+    this._eventEmitter.on(EventNames.OPEN_SUCCESS_ORDER, (res: CreateOrderResponse) => {      
       this._modalService.open(this._successOrderComponent.render(res));
     });
   }

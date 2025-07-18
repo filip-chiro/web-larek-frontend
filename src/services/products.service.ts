@@ -49,7 +49,7 @@ export class ProductsService {
         callback(products);
       };
       // Подписываемся на обновления через callback
-      this._statefulEventEmitterService.on<Product[]>(EventNames.PRODUCTS_CHANGED, _callback);
+      this._statefulEventEmitterService.onCached<Product[]>(EventNames.PRODUCTS_CHANGED, _callback);
 
       // Позволяем внешнему коду отписаться при необходимости
       if (onDestroy) {
@@ -68,6 +68,6 @@ export class ProductsService {
    * @param products Список продуктов
    */
   private _update(products: Product[]): void {
-    this._statefulEventEmitterService.emit(EventNames.PRODUCTS_CHANGED, products)
+    this._statefulEventEmitterService.emitCached(EventNames.PRODUCTS_CHANGED, products)
   }
 }

@@ -1,7 +1,7 @@
-import { BasketService } from "../../../services/basket.service";
-import { StatefulEventEmitterService } from "../../../services/stateful-event-emitter.service";
+import { BasketService } from "../../../services/basket.service"
 import { EventNames, Product } from "../../../types";
 import { BasketComponentData } from "../../../types/components/basket.component";
+import { EventEmitter } from "../../base/events";
 import { CachedComponent } from "./base/cached.component";
 import { BasketCardComponent } from "./basket-card.component";
 
@@ -9,73 +9,59 @@ export class BasketComponent extends CachedComponent<BasketComponentData> {
   constructor(
     private readonly _basketService: BasketService,
     private readonly _basketCardComponent: BasketCardComponent,
-    private readonly _statefulEventEmitterService: StatefulEventEmitterService
+    private readonly _eventEmitter: EventEmitter
   ) {
-    super(document.querySelector('#basket'));
+    const template = document.querySelector<HTMLTemplateElement>('#basket'); // получение шаблона
+    super(template); // получение узлов из дерева только при старте конструктора
   }
 
+  /**
+   * Инициализация кэшированных данных, вызывается при старте конструктора (происходит в CachedComponent)
+   * Сохраняет результат вызова этой функции в this._cachedData
+   */
   protected _initCachedData(): BasketComponentData {
-    const listItemEmptyElement = document.createElement('div');
-    const basketList = this._cachedElement.querySelector<HTMLUListElement>('.basket__list');
-    const basketListContent = document.createElement('div');
-
-    listItemEmptyElement.classList.add('basket__list-empty');
-    basketListContent.classList.add('basket__list-content');
-    basketList.parentElement.insertBefore(basketListContent, basketList);
-    basketListContent.appendChild(listItemEmptyElement);
-    basketListContent.appendChild(basketList);
-
     return {
-      basketElement: this._cachedElement,
-      basketList: basketList,
-      priceElement: this._cachedElement.querySelector<HTMLSpanElement>('.basket__price'),
-      submitBtnElement: this._cachedElement.querySelector<HTMLButtonElement>('.basket__button'),
-      listItemEmptyElement: listItemEmptyElement
+      basketElement: this._clonedTemplate,
+      basketList: this._clonedTemplate.querySelector<HTMLUListElement>('.basket__list'),
+      priceElement: this._clonedTemplate.querySelector<HTMLSpanElement>('.basket__price'),
+      submitBtnElement: this._clonedTemplate.querySelector<HTMLButtonElement>('.basket__button')
     };
   }
-
+  
+  /**
+   * Вызывается один раз после старта конструктора и создания this._cachedData
+   */
   protected _afterInit(): void {
-    const {
-      basketList,
-      listItemEmptyElement,
-      priceElement,
-      submitBtnElement
-    } = this._cachedData;
+    this._basketService.onBasket((products: Product[]) => this._renderAll(products));
 
-    const getPriceBasket = () => this._basketService.getPriceBasket();
-
-    const renderAll = (products: Product[] = []) => {
-      basketList.textContent = '';
-      this._renderActionsInfo(submitBtnElement, priceElement, listItemEmptyElement, getPriceBasket());
-      this._appendBasketElements(basketList, products);
-    };
-
-    renderAll();
-
-    this._basketService.onBasket((products: Product[]) => renderAll(products));
-
-    submitBtnElement.addEventListener('click', () => {
-      this._statefulEventEmitterService.emit(EventNames.OPEN_ORDER_ADDRESS_PAYMENT);
+    this._cachedData.submitBtnElement.addEventListener('click', () => {
+      this._eventEmitter.emit(EventNames.OPEN_ORDER_ADDRESS_PAYMENT);
     });
   }
 
-  private _appendBasketElements(basketList: HTMLUListElement, products: Product[]): void {
-    basketList.textContent = '';
+  private _appendBasketElements(products: Product[]): void {
+    if (products.length !== 0) {
+      this._cachedData.basketList.classList.remove('basket__list_empty');
+      this._cachedData.basketList.textContent = ''
+    }
     
     for (let i = 0; i < products.length; i++) {
       const basketCardElement = this._basketCardComponent.render(products[i], i);
-      basketList.appendChild(basketCardElement);
+      this._cachedData.basketList.appendChild(basketCardElement);
     }
   }
 
-  private _renderActionsInfo(
-    submitBtnElement: HTMLButtonElement,
-    priceElement: HTMLSpanElement,
-    listItemEmptyElement: HTMLElement,
-    priceBasket: number
-  ): void {    
-    submitBtnElement.disabled = priceBasket === 0;
-    priceElement.textContent = `${priceBasket} синапсов`;
-    listItemEmptyElement.textContent = priceBasket === 0 ? 'Корзина пуста' : '';
+  private _renderActionsInfo(priceBasket: number): void {
+    this._cachedData.submitBtnElement.disabled = priceBasket === 0;
+    this._cachedData.priceElement.textContent = `${priceBasket} синапсов`;
+    if (priceBasket === 0) {
+      this._cachedData.basketList.classList.add('basket__list_empty');
+      this._cachedData.basketList.textContent = 'Корзина пуста'
+    };
+  }
+
+  private _renderAll(products: Product[]): void {
+    this._renderActionsInfo(this._basketService.getPriceBasket());
+    this._appendBasketElements(products);
   }
 }

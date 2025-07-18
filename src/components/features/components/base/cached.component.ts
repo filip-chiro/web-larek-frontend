@@ -10,12 +10,12 @@ export abstract class CachedComponent<
   TElement extends HTMLElement = HTMLElement
 > extends BaseComponent<TElement> {
   protected _cachedData: TCache;
-  protected _cachedElement: RegisteredElement<TElement>;
+  protected _clonedTemplate: RegisteredElement<TElement>;
   private _isRegistered: boolean;
 
   constructor(template: HTMLTemplateElement) {
     super(template);
-    this._cachedElement = this._cloneTemplate();
+    this._clonedTemplate = this._cloneTemplate();
     this._cachedData = this._initCachedData();
     this._isRegistered = false;
 
@@ -27,12 +27,15 @@ export abstract class CachedComponent<
   public render(...args: any[]): RegisteredElement<TElement> {
     this._update(...args);
     if (!this._isRegistered) {
-      this._cachedElement = this._registerElement(this._cachedElement);
+      this._clonedTemplate = this._registerElement(this._clonedTemplate);
       this._isRegistered = true;
     }
-    return this._cachedElement;
+    return this._clonedTemplate;
   }
 
+  /**
+   * Инициализация кэшированных данных, вызывается при старте конструктора
+   */
   protected abstract _initCachedData(): TCache;
 
   protected _afterInit(): void {

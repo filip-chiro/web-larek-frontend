@@ -19,6 +19,7 @@ import { SuccessOrderComponent } from "../components/succes-order.component";
 import { container } from "./di-container";
 import { GalleryController } from "../controllers/gallery.controller";
 import { BasketHeaderController } from "../controllers/basket-header.controller";
+import { EventEmitter } from "../../base/events";
 
 /**
  * Регистрирует все необходимые зависимости в глобальном DI контейнере.
@@ -30,7 +31,8 @@ import { BasketHeaderController } from "../controllers/basket-header.controller"
  * чтобы при запросе нужного класса контейнер мог автоматически разрешить
  * и передать все необходимые зависимости.
  */
-export function registerDependencies() {
+export function registerDependencies(): void {
+  container.register(EventEmitter);
   container.register(ComponentRegistryService);
   container.register(ApiOrderService);
   container.register(ApiProductsService);
@@ -39,22 +41,24 @@ export function registerDependencies() {
   container.register(ModalComponent);
   container.register(ModalService, { deps: [ModalComponent, ComponentRegistryService] });
 
-  container.register(CardCatalogComponent, { deps: [StatefulEventEmitterService] });
+  container.register(CardCatalogComponent, { deps: [EventEmitter] });
   container.register(GalleryController, { deps: [CardCatalogComponent] });
-  container.register(BasketHeaderController, { deps: [StatefulEventEmitterService] });
+  container.register(BasketHeaderController, { deps: [EventEmitter] });
   container.register(BasketService, { deps: [StatefulEventEmitterService] });
   container.register(CardFullComponent, { deps: [BasketService] });
   container.register(BasketCardComponent, { deps: [BasketService] });
-  container.register(BasketComponent, { deps: [BasketService, BasketCardComponent, StatefulEventEmitterService] });
-  container.register(OrderService, { deps: [StatefulEventEmitterService, ValidationOrderService, ApiOrderService, BasketService] });
-  container.register(PaymentAddressOrderComponent, { deps: [OrderService, StatefulEventEmitterService, ModalService] });
+  container.register(BasketComponent, { deps: [BasketService, BasketCardComponent, EventEmitter] });
+  container.register(OrderService, { deps: [
+    StatefulEventEmitterService, ValidationOrderService, ApiOrderService, BasketService, EventEmitter
+  ] });
+  container.register(PaymentAddressOrderComponent, { deps: [OrderService, EventEmitter, ModalService] });
   container.register(EmailPhoneOrderComponent, { deps: [OrderService, ModalService, BasketService] });
   container.register(SuccessOrderComponent, { deps: [ModalService] });
   container.register(ProductsService, { deps: [ApiProductsService, StatefulEventEmitterService] });
 
   container.register(AppController, {
     deps: [
-      StatefulEventEmitterService,
+      EventEmitter,
       ModalService,
       GalleryController,
       BasketHeaderController,

@@ -8,7 +8,8 @@ export class BasketCardComponent extends StatelessComponent<HTMLLIElement> {
   constructor(
     private readonly _basketService: BasketService
   ) {
-    super(document.querySelector('#card-basket'));
+    const template = document.querySelector<HTMLTemplateElement>('#card-basket'); // получение шаблона при старте конструктора
+    super(template);
   }
 
   render(product: Product, index: number): RegisteredElement<HTMLLIElement> {

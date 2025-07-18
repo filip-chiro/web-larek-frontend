@@ -1,62 +1,61 @@
 import { ModalService } from "../../../services/modal.service";
 import { OrderService } from "../../../services/order.service";
-import { StatefulEventEmitterService } from "../../../services/stateful-event-emitter.service";
 import { EventNames, Payment } from "../../../types";
 import { PaymentAddressOrderData } from "../../../types/components/payment-address-order.component";
+import { EventEmitter } from "../../base/events";
 import { CachedComponent } from "./base/cached.component";
 
 export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddressOrderData, HTMLFormElement> {
   constructor(
     private readonly _orderService: OrderService,
-    private readonly _statefulEventEmitterService: StatefulEventEmitterService,
+    private readonly _eventEmitter: EventEmitter,
     private readonly _modalService: ModalService
   ) {
-    super(document.querySelector('#order'));
+    const template = document.querySelector<HTMLTemplateElement>('#order'); // получение шаблона
+    super(template); // получение узлов из дерева только при старте конструктора
   }
 
+  /**
+   * Инициализация кэшированных данных, вызывается при старте конструктора (происходит в CachedComponent)
+   * Сохраняет результат вызова этой функции в this._cachedData
+   */
   protected _initCachedData(): PaymentAddressOrderData {
     return {
-      btnOnline: this._cachedElement.querySelector<HTMLButtonElement>('[name="card"]'),
-      btnOffline: this._cachedElement.querySelector<HTMLButtonElement>('[name="cash"]'),
-      inputAddress: this._cachedElement.querySelector<HTMLInputElement>('[name="address"]'),
-      submitBtn: this._cachedElement.querySelector<HTMLButtonElement>('.order__button'),
-      errors: this._cachedElement.querySelector<HTMLSpanElement>('.form__errors'),
-      form: this._cachedElement
+      btnOnline: this._clonedTemplate.querySelector<HTMLButtonElement>('[name="card"]'),
+      btnOffline: this._clonedTemplate.querySelector<HTMLButtonElement>('[name="cash"]'),
+      inputAddress: this._clonedTemplate.querySelector<HTMLInputElement>('[name="address"]'),
+      submitBtn: this._clonedTemplate.querySelector<HTMLButtonElement>('.order__button'),
+      errors: this._clonedTemplate.querySelector<HTMLSpanElement>('.form__errors'),
+      form: this._clonedTemplate
     };
   }
 
+  /**
+   * Вызывается один раз после старта конструктора и создания this._cachedData
+   */
   protected _afterInit(): void {
-    const {
-      btnOnline,
-      btnOffline,
-      inputAddress,
-      submitBtn,
-      errors,
-      form
-    } = this._cachedData;
+    this._setPaymentMethod('online');
 
-    this._setPaymentMethod('online', btnOnline, btnOffline);
-
-    btnOnline.addEventListener('click', () => {
-      this._setPaymentMethod('online', btnOnline, btnOffline);
+    this._cachedData.btnOnline.addEventListener('click', () => {
+      this._setPaymentMethod('online');
     });
 
-    btnOffline.addEventListener('click', () => {
-      this._setPaymentMethod('offline', btnOnline, btnOffline);
+    this._cachedData.btnOffline.addEventListener('click', () => {
+      this._setPaymentMethod('offline');
     });
 
-    inputAddress.addEventListener('input', () => {
-      this._orderService.setAddress(inputAddress.value);
+    this._cachedData.inputAddress.addEventListener('input', () => {
+      this._orderService.setAddress(this._cachedData.inputAddress.value);
     });
 
     this._orderService.onFormStateChange(['address'], (state) => {
-      errors.textContent = state.errors.address ?? '';
-      submitBtn.disabled = !state.isValid;
+      this._cachedData.errors.textContent = state.errors.address ?? '';
+      this._cachedData.submitBtn.disabled = !state.isValid;
     });
 
-    form.addEventListener('submit', (event) => {
+    this._cachedData.form.addEventListener('submit', (event) => {
       event.preventDefault();
-      this._statefulEventEmitterService.emit(EventNames.OPEN_ORDER_EMAIL_PHONE);
+      this._eventEmitter.emit(EventNames.OPEN_ORDER_EMAIL_PHONE);
     });
 
     // при закрытии модалки ручном (крестик, ESC) сбрасываем состояние заказа
@@ -65,38 +64,26 @@ export class PaymentAddressOrderComponent extends CachedComponent<PaymentAddress
     });
   }
 
-  private _setPaymentMethod(
-    currentMethod: Payment,
-    btnOnline: HTMLButtonElement,
-    btnOffline: HTMLButtonElement
-  ): void {
+  private _setPaymentMethod(currentMethod: Payment): void {
     this._orderService.setPaymentMethod(currentMethod);
-    this._updatePaymentButtonStyles(currentMethod, btnOnline, btnOffline);
+    this._updatePaymentButtonStyles(currentMethod);
   }
 
   private _updatePaymentButtonStyles(
-    method: Payment,
-    btnOnline: HTMLButtonElement,
-    btnOffline: HTMLButtonElement
+    method: Payment
   ): void {
-    btnOnline.classList.toggle('button_alt-active', method === 'online');
-    btnOffline.classList.toggle('button_alt-active', method === 'offline');
+    this._cachedData.btnOnline.classList.toggle('button_alt-active', method === 'online');
+    this._cachedData.btnOffline.classList.toggle('button_alt-active', method === 'offline');
   }
 
+  /**
+   * Вызывается каждый раз, когда вызывается публичный метод render
+   */
   protected _update(): void {
-    const {
-      btnOnline,
-      btnOffline,
-      submitBtn,
-      inputAddress,
-      errors
-    } = this._cachedData;
-    
-    this._setPaymentMethod('online', btnOnline, btnOffline);
-
-    inputAddress.value = '';
-    submitBtn.disabled = true;
-    errors.textContent = '';
+    this._setPaymentMethod('online');
+    this._cachedData.inputAddress.value = '';
+    this._cachedData.submitBtn.disabled = true;
+    this._cachedData.errors.textContent = '';
   }
 
 }

@@ -1,3 +1,4 @@
+import { EventEmitter } from "../components/base/events";
 import { EventNames, Order, Payment } from "../types";
 import { ApiOrderService } from "./api-order.service";
 import { BasketService } from "./basket.service";
@@ -14,7 +15,8 @@ export class OrderService {
     private readonly _statefulEventEmitterService: StatefulEventEmitterService,
     private readonly _validationOrderService: ValidationOrderService,
     private readonly _apiOrderService: ApiOrderService,
-    private readonly _basketService: BasketService
+    private readonly _basketService: BasketService,
+    private readonly _eventEmitter: EventEmitter
   ) {}
 
   get isValid(): boolean {
@@ -83,7 +85,7 @@ export class OrderService {
 
     this._apiOrderService.send(order as Order)
       .then((res) => {
-        this._statefulEventEmitterService.emit(EventNames.OPEN_SUCCESS_ORDER, res);
+        this._eventEmitter.emit(EventNames.OPEN_SUCCESS_ORDER, res);
       })
       .catch((err) => {
         console.error(err);
@@ -94,7 +96,7 @@ export class OrderService {
   private _emitOrderUpdate(partialOrder: Partial<Order>): void {
     const currentOrder = this._getCurrentOrder();
     const newOrder = { ...currentOrder, ...partialOrder };
-    this._statefulEventEmitterService.emit(EventNames.ORDER_CHANGED, newOrder);
+    this._statefulEventEmitterService.emitCached(EventNames.ORDER_CHANGED, newOrder);
   }
 
   private _getCurrentOrder(): Partial<Order> {

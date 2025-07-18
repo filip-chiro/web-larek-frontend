@@ -31,19 +31,14 @@ export interface GetAllProductsResponse {
 }
 
 export enum EventNames {
-  OPEN_CARD_FULL = 'open-card-full',
-  BASKET = 'basket',
-  OPEN_CART = 'open-cart',
-  ORDER = 'order',
-  OPEN_ORDER_ADDRESS_PAYMENT = 'open-order-address-payment',
-  OPEN_ORDER_EMAIL_PHONE = 'open-order-email-phone',
-  OPEN_SUCCESS_ORDER = 'open-success-order',
-  EMAIL_INPUT = 'email-input',
-  PHONE_INPUT = 'phone-input',
-  ORDER_SUBMIT = 'order-submit',
-  ORDER_CLEAR = 'order-clear',
-  ORDER_CHANGED = 'order-changed',
-  PRODUCTS_CHANGED = 'products-changed'
+  OPEN_CARD_FULL = 'open-card-full', // открытие модального окна с полной карточкой товара
+  BASKET_CHANGED = 'basket-changed', // обновление списка товаров в корзине
+  OPEN_BASKET = 'open-basket', // открытие корзины
+  OPEN_ORDER_ADDRESS_PAYMENT = 'open-order-address-payment', // открытие модального окна с адресом и способом оплаты
+  OPEN_ORDER_EMAIL_PHONE = 'open-order-email-phone', // открытие модального окна с email и телефоном
+  OPEN_SUCCESS_ORDER = 'open-success-order', // открытие модального окна с информацией о заказе
+  ORDER_CHANGED = 'order-changed', //  изменение состояния заказа
+  PRODUCTS_CHANGED = 'products-changed' // изменение состояния списка продуктов, которые рендерятся в галерее
 }
 
 export interface Order {

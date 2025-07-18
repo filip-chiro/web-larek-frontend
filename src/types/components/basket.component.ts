@@ -3,5 +3,4 @@ export interface BasketComponentData {
   basketList: HTMLUListElement;
   priceElement: HTMLElement;
   submitBtnElement: HTMLButtonElement;
-  listItemEmptyElement: HTMLElement;
 }

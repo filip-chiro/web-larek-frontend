@@ -1,14 +1,15 @@
-import { StatefulEventEmitterService } from "../../../services/stateful-event-emitter.service";
 import { EventNames, Product } from "../../../types";
 import { RegisteredElement } from "../../../types/components/base/component";
 import { getCdnImgUrl, getProductCategoryCssClass, getProductPriceText } from "../../../utils/utils";
+import { EventEmitter } from "../../base/events";
 import { StatelessComponent } from "./base/stateless.component";
 
 export class CardCatalogComponent extends StatelessComponent {
   constructor(
-    private readonly _statefulEventEmitterService: StatefulEventEmitterService
+    private readonly _eventEmitter: EventEmitter
   ) {
-    super(document.querySelector('#card-catalog'));
+    const template = document.querySelector<HTMLTemplateElement>('#card-catalog'); // получение шаблона при старте конструктора
+    super(template);
   }
 
   render(product: Product): RegisteredElement {
@@ -37,6 +38,6 @@ export class CardCatalogComponent extends StatelessComponent {
    * @param product - продукт, связанный с данной карточкой
    */
   private _cardCatalogClick = (product: Product): void => {
-    this._statefulEventEmitterService.emit(EventNames.OPEN_CARD_FULL, product);
+    this._eventEmitter.emit(EventNames.OPEN_CARD_FULL, product);
   }
 }
